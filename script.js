@@ -1,65 +1,45 @@
 document.addEventListener("DOMContentLoaded", function(){
 
-function createChart(id,label,unit,color){
+/* ===== CHART ===== */
 
-    return new Chart(document.getElementById(id),{
-        type:'line',
-        data:{
-            labels:[],
-            datasets:[{
-                label: label + " ("+unit+")",
-                data:[],
-                borderColor:color,
-                tension:0.3
-            }]
-        },
-        options:{
-            animation:false,
-            responsive:true,
-            scales:{
-                x:{
-                    ticks:{color:'white'}
-                },
-                y:{
-                    ticks:{
-                        color:'white',
-                        font:{size:14}
-                    },
-                    title:{
-                        display:true,
-                        text:unit,
-                        color:'white'
-                    }
+const altChart = new Chart(
+document.getElementById('altChart'),{
+    type:'line',
+    data:{
+        labels:[],
+        datasets:[{
+            label:'Altitude (m)',
+            data:[],
+            borderColor:'#00ffaa',
+            tension:0.3
+        }]
+    },
+    options:{
+        animation:false,
+        scales:{
+            y:{
+                ticks:{
+                    color:'white',
+                    font:{size:14}
                 }
             },
-            plugins:{
-                legend:{
-                    labels:{
-                        color:'white',
-                        font:{size:14}
-                    }
+            x:{
+                ticks:{color:'white'}
+            }
+        },
+        plugins:{
+            legend:{
+                labels:{
+                    color:'white',
+                    font:{size:14}
                 }
             }
         }
-    });
-}
-
-const altChart = createChart('altChart','Altitude','m','#00ffaa');
-const tempChart = createChart('tempChart','Temperature','°C','#ff5555');
-const voltChart = createChart('voltChart','Voltage','V','#ffaa00');
-const pressChart = createChart('pressChart','Pressure','hPa','#55aaff');
-
-function pushData(chart,value){
-    if(chart.data.labels.length>30){
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
     }
-    chart.data.labels.push("");
-    chart.data.datasets[0].data.push(value);
-    chart.update();
-}
+});
 
-/* MAP */
+/* ===== MAP ===== */
+
 let map = L.map('map').setView([13.731995,100.775850],15);
 
 L.tileLayer(
@@ -69,7 +49,7 @@ L.tileLayer(
 
 let marker = L.marker([13.731995,100.775850]).addTo(map);
 
-/* DEMO DATA */
+/* ===== DEMO DATA ===== */
 
 let t=0;
 
@@ -93,10 +73,14 @@ setInterval(()=>{
     document.getElementById("lat").innerText = lat.toFixed(6);
     document.getElementById("lon").innerText = lon.toFixed(6);
 
-    pushData(altChart,altitude);
-    pushData(tempChart,temp);
-    pushData(voltChart,voltage);
-    pushData(pressChart,pressure);
+    if(altChart.data.labels.length>30){
+        altChart.data.labels.shift();
+        altChart.data.datasets[0].data.shift();
+    }
+
+    altChart.data.labels.push("");
+    altChart.data.datasets[0].data.push(altitude);
+    altChart.update();
 
     marker.setLatLng([lat,lon]);
 
