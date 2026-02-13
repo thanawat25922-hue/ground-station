@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ground Station</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="left">
+        <h2>Telemetry</h2>
+        <p>PKT: <span id="pkt">0</span></p>
+        <p>TEMP: <span id="temp">0</span> °C</p>
+        <p>ALT: <span id="alt">0</span> m</p>
+        <p>HUM: <span id="hum">0</span> %</p>
+        <p>RSSI: <span id="rssi">0</span></p>
+    </div>
+
+    <div class="right">
+        <h2>Ground Station</h2>
+        <canvas id="graph"></canvas>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
