@@ -6,53 +6,273 @@
 
 <title>Ground Station</title>
 
-<link rel="stylesheet" href="style.css">
-
+<!-- CHART -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- LEAFLET MAP -->
 <link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<style>
+
+body{
+    margin:0;
+    background:#081421;
+    color:white;
+    font-family:Segoe UI;
+}
+
+/* ===== GRID LAYOUT ===== */
+
+.container{
+    display:grid;
+    grid-template-columns: 1fr 1.5fr;
+    grid-template-rows: 50vh 50vh;
+    gap:8px;
+    padding:8px;
+    height:100vh;
+    box-sizing:border-box;
+}
+
+.panel{
+    background:#0b1a2a;
+    border:1px solid #12344f;
+    border-radius:6px;
+    padding:15px;
+}
+
+/* ===== TELEMETRY ===== */
+
+h2{
+    margin-top:0;
+}
+
+.telemetry-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.telemetry-table td{
+    padding:8px;
+    border-bottom:1px solid #12344f;
+}
+
+.value{
+    color:#00ffa3;
+    font-weight:bold;
+    text-align:right;
+}
+
+/* ===== GRAPH ===== */
+
+.graph-controls{
+    margin-bottom:10px;
+}
+
+.graph-controls button{
+    background:#081421;
+    color:#00ffa3;
+    border:1px solid #00ffa3;
+    padding:6px 12px;
+    margin-right:6px;
+    cursor:pointer;
+}
+
+.graph-controls button:hover{
+    background:#00ffa3;
+    color:black;
+}
+
+/* ===== MAP ===== */
+
+#map{
+    height:100%;
+    width:100%;
+}
+
+.reserved{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#345;
+    font-size:24px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="grid-container">
+<div class="container">
 
     <!-- TELEMETRY -->
-    <div class="box telemetry">
+    <div class="panel">
         <h2>Telemetry</h2>
 
-        <table>
-            <tr><td>Packet</td><td id="packet">0</td></tr>
-            <tr><td>Altitude</td><td><span id="altitude">0</span> m</td></tr>
-            <tr><td>Temperature</td><td><span id="temp">0</span> °C</td></tr>
-            <tr><td>Voltage</td><td><span id="voltage">0</span> V</td></tr>
-            <tr><td>Pressure</td><td><span id="pressure">0</span> hPa</td></tr>
-            <tr><td>GPS Latitude</td><td id="lat">0</td></tr>
-            <tr><td>GPS Longitude</td><td id="lon">0</td></tr>
+        <table class="telemetry-table">
+            <tr><td>Packet</td><td class="value" id="packet">0</td></tr>
+            <tr><td>Altitude</td><td class="value" id="altitude">0 m</td></tr>
+            <tr><td>Temperature</td><td class="value" id="temp">0 °C</td></tr>
+            <tr><td>Voltage</td><td class="value" id="voltage">0 V</td></tr>
+            <tr><td>Pressure</td><td class="value" id="pressure">0 hPa</td></tr>
+            <tr><td>GPS Latitude</td><td class="value" id="lat">0</td></tr>
+            <tr><td>GPS Longitude</td><td class="value" id="lon">0</td></tr>
         </table>
     </div>
 
     <!-- GRAPH -->
-    <div class="box">
-        <canvas id="altChart"></canvas>
+    <div class="panel">
+
+        <div class="graph-controls">
+            <button onclick="showGraph('altitude')">Altitude</button>
+            <button onclick="showGraph('temperature')">Temperature</button>
+            <button onclick="showGraph('voltage')">Voltage</button>
+            <button onclick="showGraph('pressure')">Pressure</button>
+        </div>
+
+        <canvas id="chart"></canvas>
     </div>
 
     <!-- MAP -->
-    <div class="box">
+    <div class="panel">
         <div id="map"></div>
     </div>
 
     <!-- RESERVED -->
-    <div class="box reserved">
+    <div class="panel reserved">
         RESERVED
     </div>
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+/* ===========================
+   TELEMETRY DATA (SIMULATION)
+=========================== */
+
+let packet=0;
+
+let altitudeData=[];
+let temperatureData=[];
+let voltageData=[];
+let pressureData=[];
+let labels=[];
+
+/* ===========================
+   CHART
+=========================== */
+
+let currentGraph="altitude";
+
+const ctx=document.getElementById('chart');
+
+const chart=new Chart(ctx,{
+    type:'line',
+    data:{
+        labels:labels,
+        datasets:[{
+            label:'Altitude (m)',
+            data:altitudeData,
+            borderColor:'#00ffa3',
+            tension:0.3
+        }]
+    },
+    options:{
+        responsive:true,
+        plugins:{
+            legend:{labels:{color:"white"}}
+        },
+        scales:{
+            x:{ticks:{color:"white"}},
+            y:{ticks:{color:"white"}}
+        }
+    }
+});
+
+function showGraph(type){
+    currentGraph=type;
+    updateChart();
+}
+
+function updateChart(){
+
+    if(currentGraph==="altitude"){
+        chart.data.datasets[0].label="Altitude (m)";
+        chart.data.datasets[0].data=altitudeData;
+    }
+
+    if(currentGraph==="temperature"){
+        chart.data.datasets[0].label="Temperature (°C)";
+        chart.data.datasets[0].data=temperatureData;
+    }
+
+    if(currentGraph==="voltage"){
+        chart.data.datasets[0].label="Voltage (V)";
+        chart.data.datasets[0].data=voltageData;
+    }
+
+    if(currentGraph==="pressure"){
+        chart.data.datasets[0].label="Pressure (hPa)";
+        chart.data.datasets[0].data=pressureData;
+    }
+
+    chart.update();
+}
+
+/* ===========================
+   MAP
+=========================== */
+
+let map=L.map('map').setView([13.731995,100.775850],16);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{maxZoom:19}
+).addTo(map);
+
+let marker=L.marker([13.731995,100.775850]).addTo(map);
+
+/* ===========================
+   SIMULATED DATA LOOP
+=========================== */
+
+setInterval(()=>{
+
+    packet++;
+
+    let altitude=170+Math.sin(packet/2)*15;
+    let temp=25+Math.sin(packet/3)*2;
+    let voltage=7+Math.sin(packet/5)*0.2;
+    let pressure=1000+Math.sin(packet/4)*3;
+
+    labels.push(packet);
+    altitudeData.push(altitude);
+    temperatureData.push(temp);
+    voltageData.push(voltage);
+    pressureData.push(pressure);
+
+    if(labels.length>20){
+        labels.shift();
+        altitudeData.shift();
+        temperatureData.shift();
+        voltageData.shift();
+        pressureData.shift();
+    }
+
+    document.getElementById("packet").innerText=packet;
+    document.getElementById("altitude").innerText=altitude.toFixed(1)+" m";
+    document.getElementById("temp").innerText=temp.toFixed(1)+" °C";
+    document.getElementById("voltage").innerText=voltage.toFixed(2)+" V";
+    document.getElementById("pressure").innerText=pressure.toFixed(1)+" hPa";
+
+    updateChart();
+
+},1000);
+
+</script>
 
 </body>
 </html>
