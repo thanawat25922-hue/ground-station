@@ -11,65 +11,69 @@
 body{
     margin:0;
     font-family: Arial, Helvetica, sans-serif;
-    background:#0b0f1a;
+    background:#0a0f1c;
     color:white;
 }
 
+/* HEADER */
 .header{
     background:#111827;
-    padding:15px;
+    padding:14px;
     font-size:22px;
     font-weight:bold;
     text-align:center;
     border-bottom:2px solid #1f2937;
 }
 
+/* LAYOUT */
 .container{
     display:grid;
-    grid-template-columns:300px 1fr;
+    grid-template-columns:280px 1fr;
     gap:15px;
     padding:15px;
 }
 
-.left-panel{
+/* LEFT PANEL */
+.left{
     display:flex;
     flex-direction:column;
     gap:12px;
 }
 
-.block{
+.card{
     background:#111827;
-    padding:12px;
     border-radius:10px;
+    padding:12px;
     border:1px solid #1f2937;
 }
 
-.block-title{
-    font-size:13px;
+.label{
+    font-size:12px;
     color:#9ca3af;
 }
 
-.block-value{
-    font-size:24px;
+.value{
+    font-size:26px;
     font-weight:bold;
-    margin-top:5px;
+    margin-top:4px;
 }
 
-.graphs{
+/* GRAPH AREA */
+.right{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:15px;
 }
 
-.graph-box{
+.graph{
     background:#111827;
-    border-radius:10px;
     padding:10px;
+    border-radius:10px;
     border:1px solid #1f2937;
 }
 
 canvas{
-    background:#0b0f1a;
+    background:#0a0f1c;
     border-radius:8px;
 }
 
@@ -82,60 +86,60 @@ canvas{
 
 <div class="container">
 
-    <!-- LEFT PANEL -->
-    <div class="left-panel">
+    <!-- LEFT -->
+    <div class="left">
 
-        <div class="block">
-            <div class="block-title">MISSION TIME</div>
-            <div class="block-value" id="mission">00:00:00</div>
+        <div class="card">
+            <div class="label">MISSION TIME</div>
+            <div class="value" id="mission">00:00:00</div>
         </div>
 
-        <div class="block">
-            <div class="block-title">ALTITUDE</div>
-            <div class="block-value" id="altitude">0 m</div>
+        <div class="card">
+            <div class="label">ALTITUDE</div>
+            <div class="value" id="altitude">0 m</div>
         </div>
 
-        <div class="block">
-            <div class="block-title">TEMPERATURE</div>
-            <div class="block-value" id="temperature">0 °C</div>
+        <div class="card">
+            <div class="label">TEMPERATURE</div>
+            <div class="value" id="temperature">0 °C</div>
         </div>
 
-        <div class="block">
-            <div class="block-title">VOLTAGE</div>
-            <div class="block-value" id="voltage">0 V</div>
+        <div class="card">
+            <div class="label">VOLTAGE</div>
+            <div class="value" id="voltage">0 V</div>
         </div>
 
-        <div class="block">
-            <div class="block-title">PRESSURE</div>
-            <div class="block-value" id="pressure">0 hPa</div>
+        <div class="card">
+            <div class="label">PRESSURE</div>
+            <div class="value" id="pressure">0 hPa</div>
         </div>
 
     </div>
 
-    <!-- GRAPHS -->
-    <div class="graphs">
-        <div class="graph-box"><canvas id="altChart"></canvas></div>
-        <div class="graph-box"><canvas id="tempChart"></canvas></div>
-        <div class="graph-box"><canvas id="voltChart"></canvas></div>
-        <div class="graph-box"><canvas id="presChart"></canvas></div>
+    <!-- RIGHT -->
+    <div class="right">
+        <div class="graph"><canvas id="altChart"></canvas></div>
+        <div class="graph"><canvas id="tempChart"></canvas></div>
+        <div class="graph"><canvas id="voltChart"></canvas></div>
+        <div class="graph"><canvas id="presChart"></canvas></div>
     </div>
 
 </div>
 
 <script>
 
-// ===== REAL CLOCK =====
-function updateRealTime(){
-    let now = new Date();
-    let h = String(now.getHours()).padStart(2,'0');
-    let m = String(now.getMinutes()).padStart(2,'0');
-    let s = String(now.getSeconds()).padStart(2,'0');
+/* ===== REAL CLOCK ===== */
+function updateTime(){
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
     document.getElementById("mission").innerText =
         h+":"+m+":"+s;
 }
 
-// ===== CHART TEMPLATE =====
-function createChart(id,label,unit){
+/* ===== CREATE CHART ===== */
+function makeChart(id,label,unit){
     return new Chart(document.getElementById(id),{
         type:'line',
         data:{
@@ -161,24 +165,23 @@ function createChart(id,label,unit){
     });
 }
 
-const altChart = createChart("altChart","Altitude","m");
-const tempChart = createChart("tempChart","Temperature","°C");
-const voltChart = createChart("voltChart","Voltage","V");
-const presChart = createChart("presChart","Pressure","hPa");
+const altChart = makeChart("altChart","Altitude","m");
+const tempChart = makeChart("tempChart","Temperature","°C");
+const voltChart = makeChart("voltChart","Voltage","V");
+const presChart = makeChart("presChart","Pressure","hPa");
 
 let t = 0;
 
-// ===== SIMULATED TELEMETRY =====
+/* ===== SIMULATION ===== */
 setInterval(()=>{
 
-    updateRealTime();
-
+    updateTime();
     t++;
 
-    let altitude = 100 + Math.sin(t/5)*20;
-    let temperature = 30 + Math.sin(t/7)*3;
-    let voltage = 7.4 + Math.sin(t/10)*0.2;
-    let pressure = 1013 - altitude*0.12;
+    let altitude = 120 + Math.sin(t/4)*25;
+    let temperature = 29 + Math.sin(t/6)*2;
+    let voltage = 7.4 + Math.sin(t/8)*0.15;
+    let pressure = 1013 - altitude*0.1;
 
     document.getElementById("altitude").innerText =
         altitude.toFixed(1)+" m";
@@ -192,18 +195,17 @@ setInterval(()=>{
     document.getElementById("pressure").innerText =
         pressure.toFixed(1)+" hPa";
 
-    updateChart(altChart, altitude);
-    updateChart(tempChart, temperature);
-    updateChart(voltChart, voltage);
-    updateChart(presChart, pressure);
+    updateChart(altChart,altitude);
+    updateChart(tempChart,temperature);
+    updateChart(voltChart,voltage);
+    updateChart(presChart,pressure);
 
 },1000);
 
-
-// ===== UPDATE GRAPH =====
-function updateChart(chart,value){
+/* ===== UPDATE GRAPH ===== */
+function updateChart(chart,val){
     chart.data.labels.push("");
-    chart.data.datasets[0].data.push(value);
+    chart.data.datasets[0].data.push(val);
 
     if(chart.data.labels.length>20){
         chart.data.labels.shift();
