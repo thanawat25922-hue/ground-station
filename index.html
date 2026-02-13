@@ -2,243 +2,216 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ground Station Telemetry</title>
+<title>Web Ground Station</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link rel="stylesheet"
- href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <style>
+
 body{
     margin:0;
-    background:#071421;
-    font-family:Arial;
+    font-family: Arial, Helvetica, sans-serif;
+    background:#0b0f1a;
     color:white;
+}
+
+.header{
+    background:#111827;
+    padding:15px;
+    font-size:22px;
+    font-weight:bold;
+    text-align:center;
+    border-bottom:2px solid #1f2937;
 }
 
 .container{
     display:grid;
-    grid-template-columns: 1fr 1.5fr;
-    grid-template-rows: 1fr 1fr;
-    height:100vh;
-    gap:10px;
-    padding:10px;
-}
-
-.block{
-    background:#0b1e2f;
-    border-radius:10px;
+    grid-template-columns:300px 1fr;
+    gap:15px;
     padding:15px;
 }
 
-h2{
-    margin-top:0;
-}
-
-.telemetry-row{
+.left-panel{
     display:flex;
-    justify-content:space-between;
-    padding:6px 0;
-    border-bottom:1px solid rgba(255,255,255,0.08);
+    flex-direction:column;
+    gap:12px;
 }
 
-.value{
-    color:#2cff9a;
-    font-weight:bold;
-}
-
-#map{
-    height:100%;
+.block{
+    background:#111827;
+    padding:12px;
     border-radius:10px;
+    border:1px solid #1f2937;
 }
 
-button{
-    background:#132f46;
-    color:white;
-    border:none;
-    padding:6px 10px;
-    margin-right:5px;
-    border-radius:6px;
-    cursor:pointer;
+.block-title{
+    font-size:13px;
+    color:#9ca3af;
 }
-button:hover{
-    background:#1d4666;
+
+.block-value{
+    font-size:24px;
+    font-weight:bold;
+    margin-top:5px;
 }
+
+.graphs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.graph-box{
+    background:#111827;
+    border-radius:10px;
+    padding:10px;
+    border:1px solid #1f2937;
+}
+
+canvas{
+    background:#0b0f1a;
+    border-radius:8px;
+}
+
 </style>
 </head>
 
 <body>
 
+<div class="header">WEB GROUND STATION</div>
+
 <div class="container">
 
-<!-- TELEMETRY -->
-<div class="block">
-<h2>Telemetry</h2>
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
 
-<div class="telemetry-row"><span>TEAM ID</span><span class="value">G2</span></div>
-<div class="telemetry-row"><span>MISSION TIME</span><span id="mission" class="value">00:00:00</span></div>
-<div class="telemetry-row"><span>PACKET COUNT</span><span id="packet" class="value">0</span></div>
-<div class="telemetry-row"><span>VOLTAGE</span><span id="volt" class="value">0 V</span></div>
-<div class="telemetry-row"><span>ALTITUDE</span><span id="alt" class="value">0 m</span></div>
-<div class="telemetry-row"><span>PRESSURE</span><span id="press" class="value">0 hPa</span></div>
-<div class="telemetry-row"><span>TEMPERATURE</span><span id="temp" class="value">0 °C</span></div>
-<div class="telemetry-row"><span>HUMIDITY</span><span id="hum" class="value">0 %</span></div>
-<div class="telemetry-row"><span>GPS LATITUDE</span><span id="lat" class="value">0</span></div>
-<div class="telemetry-row"><span>GPS LONGITUDE</span><span id="lon" class="value">0</span></div>
+        <div class="block">
+            <div class="block-title">MISSION TIME</div>
+            <div class="block-value" id="mission">00:00:00</div>
+        </div>
 
-</div>
+        <div class="block">
+            <div class="block-title">ALTITUDE</div>
+            <div class="block-value" id="altitude">0 m</div>
+        </div>
 
-<!-- GRAPH -->
-<div class="block">
-<h2>Graphs</h2>
+        <div class="block">
+            <div class="block-title">TEMPERATURE</div>
+            <div class="block-value" id="temperature">0 °C</div>
+        </div>
 
-<button onclick="selectGraph('alt')">Altitude</button>
-<button onclick="selectGraph('temp')">Temperature</button>
-<button onclick="selectGraph('press')">Pressure</button>
-<button onclick="selectGraph('volt')">Voltage</button>
+        <div class="block">
+            <div class="block-title">VOLTAGE</div>
+            <div class="block-value" id="voltage">0 V</div>
+        </div>
 
-<canvas id="chart"></canvas>
-</div>
+        <div class="block">
+            <div class="block-title">PRESSURE</div>
+            <div class="block-value" id="pressure">0 hPa</div>
+        </div>
 
-<!-- MAP -->
-<div class="block">
-<div id="map"></div>
-</div>
+    </div>
 
-<!-- RESERVED -->
-<div class="block" style="display:flex;align-items:center;justify-content:center;">
-RESERVED
-</div>
+    <!-- GRAPHS -->
+    <div class="graphs">
+        <div class="graph-box"><canvas id="altChart"></canvas></div>
+        <div class="graph-box"><canvas id="tempChart"></canvas></div>
+        <div class="graph-box"><canvas id="voltChart"></canvas></div>
+        <div class="graph-box"><canvas id="presChart"></canvas></div>
+    </div>
 
 </div>
 
 <script>
 
-let telemetry = {
-    labels:[],
-    altitude:[],
-    temperature:[],
-    pressure:[],
-    voltage:[]
-};
+// ===== REAL CLOCK =====
+function updateRealTime(){
+    let now = new Date();
+    let h = String(now.getHours()).padStart(2,'0');
+    let m = String(now.getMinutes()).padStart(2,'0');
+    let s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById("mission").innerText =
+        h+":"+m+":"+s;
+}
 
-let packet = 0;
-let startTime = Date.now();
-
-let ctx = document.getElementById('chart');
-let chart = new Chart(ctx,{
-    type:'line',
-    data:{
-        labels:[],
-        datasets:[{
-            label:'Altitude (m)',
-            data:[],
-            borderColor:'#2cff9a',
-            tension:0.3
-        }]
-    },
-    options:{
-        responsive:true,
-        scales:{
-            y:{ticks:{color:'white'}},
-            x:{ticks:{color:'white'}}
+// ===== CHART TEMPLATE =====
+function createChart(id,label,unit){
+    return new Chart(document.getElementById(id),{
+        type:'line',
+        data:{
+            labels:[],
+            datasets:[{
+                label: label+" ("+unit+")",
+                data:[],
+                borderWidth:2,
+                tension:0.3
+            }]
         },
-        plugins:{
-            legend:{labels:{color:'white'}}
+        options:{
+            responsive:true,
+            animation:false,
+            scales:{
+                x:{ticks:{color:"white"}},
+                y:{ticks:{color:"white"}}
+            },
+            plugins:{
+                legend:{labels:{color:"white"}}
+            }
         }
-    }
-});
-
-let currentGraph="alt";
-
-function selectGraph(type){
-    currentGraph = type;
-    updateGraph();
+    });
 }
 
-function updateGraph(){
+const altChart = createChart("altChart","Altitude","m");
+const tempChart = createChart("tempChart","Temperature","°C");
+const voltChart = createChart("voltChart","Voltage","V");
+const presChart = createChart("presChart","Pressure","hPa");
 
-    let dataset;
+let t = 0;
 
-    if(currentGraph==="alt"){
-        dataset = telemetry.altitude;
-        chart.data.datasets[0].label="Altitude (m)";
-    }
-
-    if(currentGraph==="temp"){
-        dataset = telemetry.temperature;
-        chart.data.datasets[0].label="Temperature (°C)";
-    }
-
-    if(currentGraph==="press"){
-        dataset = telemetry.pressure;
-        chart.data.datasets[0].label="Pressure (hPa)";
-    }
-
-    if(currentGraph==="volt"){
-        dataset = telemetry.voltage;
-        chart.data.datasets[0].label="Voltage (V)";
-    }
-
-    chart.data.labels = telemetry.labels;
-    chart.data.datasets[0].data = dataset;
-    chart.update();
-}
-
-/* MAP */
-let map = L.map('map').setView([13.73,100.77],15);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-.addTo(map);
-
-let marker = L.marker([13.73,100.77]).addTo(map);
-
-
-/* SIMULATION REALTIME */
+// ===== SIMULATED TELEMETRY =====
 setInterval(()=>{
 
-    packet++;
+    updateRealTime();
 
-    let t = ((Date.now()-startTime)/1000).toFixed(0);
+    t++;
 
-    let alt = 170 + Math.sin(packet/5)*15;
-    let temp = 25 + Math.sin(packet/10)*2;
-    let press = 1000 + Math.sin(packet/8)*3;
-    let volt = 7.4 - packet*0.002;
+    let altitude = 100 + Math.sin(t/5)*20;
+    let temperature = 30 + Math.sin(t/7)*3;
+    let voltage = 7.4 + Math.sin(t/10)*0.2;
+    let pressure = 1013 - altitude*0.12;
 
-    let lat = 13.7328 + Math.sin(packet/20)*0.001;
-    let lon = 100.7763 + Math.cos(packet/20)*0.001;
+    document.getElementById("altitude").innerText =
+        altitude.toFixed(1)+" m";
 
-    telemetry.labels.push(packet);
-    telemetry.altitude.push(alt);
-    telemetry.temperature.push(temp);
-    telemetry.pressure.push(press);
-    telemetry.voltage.push(volt);
+    document.getElementById("temperature").innerText =
+        temperature.toFixed(1)+" °C";
 
-    if(telemetry.labels.length>20){
-        telemetry.labels.shift();
-        telemetry.altitude.shift();
-        telemetry.temperature.shift();
-        telemetry.pressure.shift();
-        telemetry.voltage.shift();
-    }
+    document.getElementById("voltage").innerText =
+        voltage.toFixed(2)+" V";
 
-    document.getElementById("packet").innerText = packet;
-    document.getElementById("alt").innerText = alt.toFixed(1)+" m";
-    document.getElementById("temp").innerText = temp.toFixed(1)+" °C";
-    document.getElementById("press").innerText = press.toFixed(1)+" hPa";
-    document.getElementById("volt").innerText = volt.toFixed(2)+" V";
-    document.getElementById("lat").innerText = lat.toFixed(6);
-    document.getElementById("lon").innerText = lon.toFixed(6);
+    document.getElementById("pressure").innerText =
+        pressure.toFixed(1)+" hPa";
 
-    marker.setLatLng([lat,lon]);
-
-    updateGraph();
+    updateChart(altChart, altitude);
+    updateChart(tempChart, temperature);
+    updateChart(voltChart, voltage);
+    updateChart(presChart, pressure);
 
 },1000);
+
+
+// ===== UPDATE GRAPH =====
+function updateChart(chart,value){
+    chart.data.labels.push("");
+    chart.data.datasets[0].data.push(value);
+
+    if(chart.data.labels.length>20){
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+
+    chart.update();
+}
 
 </script>
 
