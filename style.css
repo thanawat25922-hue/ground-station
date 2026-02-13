@@ -1,6 +1,6 @@
 body{
     margin:0;
-    font-family:Arial;
+    font-family:Segoe UI, Arial;
     background:#0b1220;
     color:white;
 }
@@ -10,26 +10,42 @@ body{
     height:100vh;
 }
 
+/* LEFT PANEL */
+
 .telemetry{
-    width:30%;
+    width:28%;
+    background:#0f172a;
+    padding:25px;
+    border-right:2px solid #1e293b;
+}
+
+.telemetry h2{
+    margin-top:0;
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
     background:#111827;
-    padding:20px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    border-radius:6px;
+    font-size:14px;
 }
 
-.grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
+.value{
+    font-size:20px;
+    font-weight:bold;
+    color:#22c55e;
 }
 
-.grid div{
-    background:#1f2937;
-    padding:10px;
-    border-radius:5px;
-}
+/* RIGHT PANEL */
 
 .right{
-    width:70%;
+    width:72%;
     padding:20px;
     overflow:auto;
 }
@@ -39,9 +55,13 @@ canvas{
     margin-bottom:25px;
     background:#0f172a;
     border-radius:10px;
+    padding:10px;
 }
+
+/* MAP */
 
 #map{
     height:350px;
     border-radius:10px;
+    border:1px solid #1f2937;
 }
