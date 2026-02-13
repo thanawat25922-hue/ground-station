@@ -18,76 +18,36 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <body>
 
-<div class="main">
+<div class="grid-container">
 
-    <!-- LEFT TELEMETRY -->
-    <div class="panel telemetry">
+    <!-- TELEMETRY -->
+    <div class="box telemetry">
+        <h2>Telemetry</h2>
 
-        <h2>TELEMETRY</h2>
-
-        <div class="grid">
-
-            <div class="card">
-                <div class="label">PACKET</div>
-                <div class="big" id="packet">0</div>
-            </div>
-
-            <div class="card">
-                <div class="label">ALTITUDE</div>
-                <div class="big"><span id="altitude">0</span> m</div>
-            </div>
-
-            <div class="card">
-                <div class="label">TEMPERATURE</div>
-                <div class="big"><span id="temp">0</span> °C</div>
-            </div>
-
-            <div class="card">
-                <div class="label">VOLTAGE</div>
-                <div class="big"><span id="voltage">0</span> V</div>
-            </div>
-
-            <div class="card">
-                <div class="label">PRESSURE</div>
-                <div class="big"><span id="pressure">0</span> hPa</div>
-            </div>
-
-            <div class="card">
-                <div class="label">GPS LAT</div>
-                <div class="big small" id="lat">0</div>
-            </div>
-
-            <div class="card">
-                <div class="label">GPS LON</div>
-                <div class="big small" id="lon">0</div>
-            </div>
-
-        </div>
+        <table>
+            <tr><td>Packet</td><td id="packet">0</td></tr>
+            <tr><td>Altitude</td><td><span id="altitude">0</span> m</td></tr>
+            <tr><td>Temperature</td><td><span id="temp">0</span> °C</td></tr>
+            <tr><td>Voltage</td><td><span id="voltage">0</span> V</td></tr>
+            <tr><td>Pressure</td><td><span id="pressure">0</span> hPa</td></tr>
+            <tr><td>GPS Latitude</td><td id="lat">0</td></tr>
+            <tr><td>GPS Longitude</td><td id="lon">0</td></tr>
+        </table>
     </div>
 
-    <!-- RIGHT SIDE -->
-    <div class="panel right">
+    <!-- GRAPH -->
+    <div class="box">
+        <canvas id="altChart"></canvas>
+    </div>
 
-        <div class="chartCard">
-            <canvas id="altChart"></canvas>
-        </div>
+    <!-- MAP -->
+    <div class="box">
+        <div id="map"></div>
+    </div>
 
-        <div class="chartCard">
-            <canvas id="tempChart"></canvas>
-        </div>
-
-        <div class="chartCard">
-            <canvas id="voltChart"></canvas>
-        </div>
-
-        <div class="chartCard">
-            <canvas id="pressChart"></canvas>
-        </div>
-
-        <div class="mapCard">
-            <div id="map"></div>
-        </div>
-
+    <!-- RESERVED -->
+    <div class="box reserved">
+        RESERVED
     </div>
 
 </div>
