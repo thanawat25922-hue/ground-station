@@ -1,221 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Ground Station</title>
 
+<link rel="stylesheet" href="style.css">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<style>
-body{
-    margin:0;
-    background:#0b1420;
-    color:white;
-    font-family:Arial;
-    display:flex;
-}
-
-.telemetry{
-    width:320px;
-    padding:15px;
-    background:#101c2c;
-    overflow-y:auto;
-    height:100vh;
-}
-
-.telemetry h2{
-    text-align:center;
-}
-
-.row{
-    display:flex;
-    justify-content:space-between;
-    padding:6px 0;
-    border-bottom:1px solid rgba(255,255,255,0.1);
-}
-
-.main{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-}
-
-#chartContainer{
-    height:50%;
-    padding:20px;
-}
-
-#map{
-    height:50%;
-}
-</style>
 </head>
 
 <body>
 
-<div class="telemetry">
+<div class="container">
 
-<h2>TELEMETRY</h2>
+    <!-- LEFT PANEL -->
+    <div class="telemetry">
 
-<div class="row"><span>TEAM ID</span><span id="team">G2</span></div>
-<div class="row"><span>MISSION TIME</span><span id="missionTime">0</span></div>
+        <h1>TELEMETRY</h1>
 
-<div class="row"><span>PACKET COUNT</span><span id="packet">0</span></div>
-<div class="row"><span>MODE</span><span id="mode">FLIGHT</span></div>
+        <div class="grid">
 
-<div class="row"><span>VOLTAGE</span><span id="voltage">0</span></div>
-<div class="row"><span>STATE</span><span id="state">READY</span></div>
+            <div>TEAM ID</div><div id="team">G2</div>
+            <div>MISSION TIME</div><div id="mission">00:00</div>
 
-<div class="row"><span>ALTITUDE</span><span id="altitude">0</span></div>
-<div class="row"><span>GYRO PITCH</span><span id="gyroPitch">0</span></div>
+            <div>PACKET COUNT</div><div id="packet">0</div>
+            <div>MODE</div><div id="mode">FLIGHT</div>
 
-<div class="row"><span>PRESSURE</span><span id="pressure">0</span></div>
-<div class="row"><span>GYRO ROLL</span><span id="gyroRoll">0</span></div>
+            <div>VOLTAGE</div><div id="voltage">0</div>
+            <div>STATE</div><div id="state">READY</div>
 
-<div class="row"><span>TEMPERATURE</span><span id="temp">0</span></div>
-<div class="row"><span>GYRO YAW</span><span id="gyroYaw">0</span></div>
+            <div>ALTITUDE</div><div id="altitude">0</div>
+            <div>GYRO PITCH</div><div id="gyroPitch">0</div>
 
-<div class="row"><span>HUMIDITY</span><span id="humidity">0</span></div>
-<div class="row"><span>ACCELERATION PITCH</span><span id="accPitch">0</span></div>
+            <div>PRESSURE</div><div id="pressure">0</div>
+            <div>GYRO ROLL</div><div id="gyroRoll">0</div>
 
-<div class="row"><span>ACCELERATION YAW</span><span id="accYaw">0</span></div>
-<div class="row"><span>ACCELERATION ROLL</span><span id="accRoll">0</span></div>
+            <div>TEMPERATURE</div><div id="temp">0</div>
+            <div>GYRO YAW</div><div id="gyroYaw">0</div>
 
-<div class="row"><span>GPS STATE</span><span id="gpsState">FIX</span></div>
-<div class="row"><span>GPS TIME</span><span id="gpsTime">00:00</span></div>
+            <div>HUMIDITY</div><div id="humidity">0</div>
+            <div>ACC PITCH</div><div id="accPitch">0</div>
 
-<div class="row"><span>GPS LONGITUDE</span><span id="lon">0</span></div>
-<div class="row"><span>GPS LATITUDE</span><span id="lat">0</span></div>
+            <div>ACC YAW</div><div id="accYaw">0</div>
+            <div>ACC ROLL</div><div id="accRoll">0</div>
+
+            <div>GPS STATE</div><div id="gpsState">FIX</div>
+            <div>GPS TIME</div><div id="gpsTime">00:00</div>
+
+            <div>GPS LONGITUDE</div><div id="lon">0</div>
+            <div>GPS LATITUDE</div><div id="lat">0</div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="charts">
+
+        <canvas id="altChart"></canvas>
+        <canvas id="tempChart"></canvas>
+        <canvas id="voltChart"></canvas>
+        <canvas id="pressChart"></canvas>
+
+    </div>
 
 </div>
 
-<div class="main">
-
-<div id="chartContainer">
-<canvas id="chart"></canvas>
-</div>
-
-<div id="map"></div>
-
-</div>
-
-<script>
-
-// ===== CHART SETUP =====
-const ctx = document.getElementById('chart').getContext('2d');
-
-let altitudeData = [];
-let tempData = [];
-let voltageData = [];
-let pressureData = [];
-let labels = [];
-
-const chart = new Chart(ctx,{
-type:'line',
-data:{
-labels:labels,
-datasets:[
-{label:'Altitude',data:altitudeData,borderColor:'#00ffaa',tension:0.4},
-{label:'Temperature',data:tempData,borderColor:'#ff5555',tension:0.4},
-{label:'Voltage',data:voltageData,borderColor:'#ffaa00',tension:0.4},
-{label:'Pressure',data:pressureData,borderColor:'#55aaff',tension:0.4}
-]
-},
-options:{
-responsive:true,
-animation:false,
-scales:{
-x:{display:false},
-y:{ticks:{color:'white'}}
-},
-plugins:{
-legend:{labels:{color:'white'}}
-}
-}
-});
-
-// ===== MAP SETUP =====
-let lat = 13.731995;
-let lon = 100.775850;
-
-const map = L.map('map').setView([lat, lon], 16);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
-
-const marker = L.marker([lat, lon]).addTo(map);
-
-// ===== SIMULATION =====
-let packet = 0;
-let missionTime = 0;
-
-function random(min,max){
-return Math.random()*(max-min)+min;
-}
-
-function update(){
-
-packet++;
-missionTime++;
-
-let altitude = random(170,190);
-let temp = random(24,30);
-let voltage = random(7.0,8.4);
-let pressure = random(990,1020);
-
-lat += random(-0.0001,0.0001);
-lon += random(-0.0001,0.0001);
-
-document.getElementById("packet").innerText = packet;
-document.getElementById("missionTime").innerText = missionTime;
-document.getElementById("altitude").innerText = altitude.toFixed(1);
-document.getElementById("temp").innerText = temp.toFixed(1);
-document.getElementById("voltage").innerText = voltage.toFixed(2);
-document.getElementById("pressure").innerText = pressure.toFixed(1);
-
-document.getElementById("humidity").innerText = random(40,60).toFixed(1);
-document.getElementById("gyroPitch").innerText = random(-10,10).toFixed(2);
-document.getElementById("gyroRoll").innerText = random(-10,10).toFixed(2);
-document.getElementById("gyroYaw").innerText = random(-180,180).toFixed(2);
-
-document.getElementById("accPitch").innerText = random(-5,5).toFixed(2);
-document.getElementById("accRoll").innerText = random(-5,5).toFixed(2);
-document.getElementById("accYaw").innerText = random(-5,5).toFixed(2);
-
-document.getElementById("lat").innerText = lat.toFixed(6);
-document.getElementById("lon").innerText = lon.toFixed(6);
-
-document.getElementById("gpsTime").innerText = new Date().toLocaleTimeString();
-
-if(labels.length>30){
-labels.shift();
-altitudeData.shift();
-tempData.shift();
-voltageData.shift();
-pressureData.shift();
-}
-
-labels.push("");
-altitudeData.push(altitude);
-tempData.push(temp);
-voltageData.push(voltage);
-pressureData.push(pressure);
-
-chart.update();
-
-marker.setLatLng([lat,lon]);
-map.panTo([lat,lon]);
-
-}
-
-setInterval(update,1000);
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
