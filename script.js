@@ -1,113 +1,72 @@
-// =======================
-// MAP
-// =======================
-let map = L.map('map').setView([13.731995, 100.775850], 17);
-
-L.tileLayer(
- 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-).addTo(map);
-
-let marker = L.marker([13.731995, 100.775850]).addTo(map);
-
-// =======================
-// CHART ALTITUDE
-// =======================
-const altChart = new Chart(
-document.getElementById('altChart'),
-{
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Altitude',
-            data: [],
-            borderColor: '#00ffaa',
-            tension: 0.2
-        }]
-    },
-    options: {
-        animation:false,
-        scales: {
-            x: { display:false }
+function createChart(id,label,color){
+    return new Chart(
+        document.getElementById(id),
+        {
+            type:'line',
+            data:{
+                labels:[],
+                datasets:[{
+                    label:label,
+                    data:[],
+                    borderColor:color,
+                    tension:0.4
+                }]
+            },
+            options:{
+                animation:false,
+                responsive:true,
+                scales:{
+                    x:{display:false},
+                    y:{ticks:{color:'white'}}
+                },
+                plugins:{
+                    legend:{labels:{color:'white'}}
+                }
+            }
         }
-    }
-});
+    );
+}
 
-// =======================
-// CHART TEMP
-// =======================
-const tempChart = new Chart(
-document.getElementById('tempChart'),
-{
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Temperature',
-            data: [],
-            borderColor: '#ff5555',
-            tension: 0.2
-        }]
-    },
-    options: {
-        animation:false,
-        scales: {
-            x: { display:false }
-        }
-    }
-});
+const altChart = createChart('altChart','Altitude','#00ffaa');
+const tempChart = createChart('tempChart','Temperature','#ff5555');
+const voltChart = createChart('voltChart','Voltage','#ffaa00');
+const pressChart = createChart('pressChart','Pressure','#55aaff');
 
-// =======================
-// SIMULATED TELEMETRY
-// =======================
-let packet = 0;
+function pushData(chart,value){
 
-setInterval(() => {
-
-    packet++;
-
-    let data = {
-        team: "G2",
-        packet: packet,
-        volt: (7.2 + Math.random()).toFixed(2),
-        alt: (170 + Math.random()*20).toFixed(1),
-        temp: (24 + Math.random()*3).toFixed(1),
-        hum: (40 + Math.random()*10).toFixed(1),
-        lat: 13.731995 + Math.random()*0.0003,
-        lon: 100.775850 + Math.random()*0.0003
-    };
-
-    // update text
-    document.getElementById("team").innerText = data.team;
-    document.getElementById("packet").innerText = data.packet;
-    document.getElementById("volt").innerText = data.volt;
-    document.getElementById("alt").innerText = data.alt;
-    document.getElementById("temp").innerText = data.temp;
-    document.getElementById("hum").innerText = data.hum;
-    document.getElementById("lat").innerText = data.lat.toFixed(6);
-    document.getElementById("lon").innerText = data.lon.toFixed(6);
-
-    document.getElementById("status").style.background = "lime";
-
-    // update chart
-    altChart.data.labels.push("");
-    altChart.data.datasets[0].data.push(data.alt);
-
-    tempChart.data.labels.push("");
-    tempChart.data.datasets[0].data.push(data.temp);
-
-    if (altChart.data.labels.length > 30) {
-        altChart.data.labels.shift();
-        altChart.data.datasets[0].data.shift();
-        tempChart.data.labels.shift();
-        tempChart.data.datasets[0].data.shift();
+    if(chart.data.labels.length > 30){
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
     }
 
-    altChart.update();
-    tempChart.update();
+    chart.data.labels.push("");
+    chart.data.datasets[0].data.push(value);
+    chart.update();
+}
 
-    // update map
-    marker.setLatLng([data.lat, data.lon]);
-    map.panTo([data.lat, data.lon]);
+/* ===== DEMO DATA (ยังไม่ต่อ Arduino) ===== */
 
-}, 1000);
+let t = 0;
+
+setInterval(()=>{
+
+    t++;
+
+    let altitude = 170 + Math.sin(t/3)*15;
+    let temp = 25 + Math.sin(t/5)*2;
+    let voltage = 7 + Math.sin(t/4)*0.3;
+    let pressure = 1000 + Math.sin(t/6)*5;
+
+    document.getElementById("altitude").innerText = altitude.toFixed(1);
+    document.getElementById("temp").innerText = temp.toFixed(1);
+    document.getElementById("voltage").innerText = voltage.toFixed(2);
+    document.getElementById("pressure").innerText = pressure.toFixed(1);
+
+    document.getElementById("packet").innerText = t;
+
+    pushData(altChart,altitude);
+    pushData(tempChart,temp);
+    pushData(voltChart,voltage);
+    pushData(pressChart,pressure);
+
+},1000);
