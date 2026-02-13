@@ -8,10 +8,10 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- Chart -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Leaflet MAP -->
+<!-- Leaflet Map -->
 <link rel="stylesheet"
 href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -23,28 +23,54 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <div class="container">
 
-    <!-- LEFT TELEMETRY -->
+    <!-- LEFT PANEL -->
     <div class="telemetry">
 
         <h2>TELEMETRY</h2>
 
-        <div class="grid">
-            <div>TEAM ID</div><div id="team">G2</div>
-            <div>PACKET</div><div id="packet">0</div>
+        <div class="row">
+            <span>TEAM ID</span>
+            <span class="value" id="team">G2</span>
+        </div>
 
-            <div>ALTITUDE</div><div id="altitude">0</div>
-            <div>TEMPERATURE</div><div id="temp">0</div>
+        <div class="row">
+            <span>PACKET</span>
+            <span class="value" id="packet">0</span>
+        </div>
 
-            <div>VOLTAGE</div><div id="voltage">0</div>
-            <div>PRESSURE</div><div id="pressure">0</div>
+        <div class="row">
+            <span>ALTITUDE</span>
+            <span class="value"><span id="altitude">0</span> m</span>
+        </div>
 
-            <div>GPS LAT</div><div id="lat">0</div>
-            <div>GPS LON</div><div id="lon">0</div>
+        <div class="row">
+            <span>TEMPERATURE</span>
+            <span class="value"><span id="temp">0</span> °C</span>
+        </div>
+
+        <div class="row">
+            <span>VOLTAGE</span>
+            <span class="value"><span id="voltage">0</span> V</span>
+        </div>
+
+        <div class="row">
+            <span>PRESSURE</span>
+            <span class="value"><span id="pressure">0</span> hPa</span>
+        </div>
+
+        <div class="row">
+            <span>GPS LAT</span>
+            <span class="value" id="lat">0</span>
+        </div>
+
+        <div class="row">
+            <span>GPS LON</span>
+            <span class="value" id="lon">0</span>
         </div>
 
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT PANEL -->
     <div class="right">
 
         <canvas id="altChart"></canvas>
