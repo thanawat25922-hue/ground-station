@@ -14,11 +14,6 @@ body{
     width:30%;
     background:#111827;
     padding:20px;
-    overflow:auto;
-}
-
-.telemetry h1{
-    margin-bottom:20px;
 }
 
 .grid{
@@ -33,7 +28,7 @@ body{
     border-radius:5px;
 }
 
-.charts{
+.right{
     width:70%;
     padding:20px;
     overflow:auto;
