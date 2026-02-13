@@ -5,11 +5,13 @@
 <title>CANSAT GROUND STATION</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <link rel="stylesheet"
- href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
+
 body{
     margin:0;
     font-family:Arial;
@@ -24,7 +26,7 @@ body{
 }
 
 /* LEFT SIDE */
-.telemetry{
+.left{
     background:#2b2b2b;
     padding:10px;
     display:grid;
@@ -32,15 +34,15 @@ body{
     gap:10px;
 }
 
-.block{
+.telemetry{
     background:#333;
+    border-radius:6px;
     padding:10px;
-    border-radius:5px;
 }
 
-.block h3{
-    margin-top:0;
+.telemetry h3{
     text-align:center;
+    margin-top:0;
 }
 
 .grid{
@@ -68,6 +70,11 @@ body{
 #map{
     height:100%;
 }
+
+select{
+    margin-bottom:10px;
+}
+
 </style>
 </head>
 
@@ -76,30 +83,33 @@ body{
 <div class="container">
 
 <!-- LEFT -->
-<div class="telemetry">
+<div class="left">
 
-    <div class="block">
+    <!-- BLOCK 1 -->
+    <div class="telemetry">
         <h3>MISSION</h3>
         <div class="grid">
-            <div>TEAM ID</div><div class="value" id="team">2034</div>
-            <div>MISSION TIME</div><div class="value" id="time">0</div>
+            <div>TEAM ID</div><div class="value">2034</div>
+            <div>MISSION TIME</div><div class="value" id="missionTime">0</div>
             <div>PACKET COUNT</div><div class="value" id="packet">0</div>
             <div>MODE</div><div class="value">FLIGHT</div>
             <div>STATE</div><div class="value">ASCENT</div>
-            <div>VOLTAGE</div><div class="value" id="volt">0</div>
+            <div>VOLTAGE</div><div class="value" id="voltage">0</div>
         </div>
     </div>
 
-    <div class="block">
+    <!-- BLOCK 2 -->
+    <div class="telemetry">
         <h3>SENSORS</h3>
         <div class="grid">
-            <div>ALTITUDE</div><div class="value" id="alt">0</div>
-            <div>PRESSURE</div><div class="value" id="pres">0</div>
-            <div>TEMPERATURE</div><div class="value" id="temp">0</div>
+            <div>ALTITUDE</div><div class="value" id="altitude">0</div>
+            <div>PRESSURE</div><div class="value" id="pressure">0</div>
+            <div>TEMPERATURE</div><div class="value" id="temperature">0</div>
         </div>
     </div>
 
-    <div class="block">
+    <!-- BLOCK 3 -->
+    <div class="telemetry">
         <h3>GYRO</h3>
         <div class="grid">
             <div>PITCH</div><div class="value">1.2</div>
@@ -108,13 +118,14 @@ body{
         </div>
     </div>
 
-    <div class="block">
+    <!-- BLOCK 4 -->
+    <div class="telemetry">
         <h3>GPS</h3>
         <div class="grid">
-            <div>STATE</div><div class="value">LOCK</div>
-            <div>LAT</div><div class="value" id="lat">0</div>
-            <div>LON</div><div class="value" id="lon">0</div>
-            <div>GPS TIME</div><div class="value" id="gpstime">0</div>
+            <div>GPS STATE</div><div class="value">LOCK</div>
+            <div>LATITUDE</div><div class="value" id="lat">0</div>
+            <div>LONGITUDE</div><div class="value" id="lon">0</div>
+            <div>GPS TIME</div><div class="value" id="gpsTime">0</div>
         </div>
     </div>
 
@@ -148,13 +159,14 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 let marker = L.marker([13.7563,100.5018]).addTo(map);
 
 /* ===== CHART ===== */
-let ctx=document.getElementById("chart");
-let chart=new Chart(ctx,{
+let chart = new Chart(
+document.getElementById("chart"),
+{
 type:'line',
 data:{
 labels:[],
 datasets:[{
-label:"Altitude",
+label:"DATA",
 data:[],
 borderColor:"#00ffcc",
 fill:false
@@ -170,44 +182,49 @@ y:{ticks:{color:"white"}}
 });
 
 /* ===== DATA ===== */
-let start=Date.now();
-let packet=0;
+let start = Date.now();
+let packet = 0;
 
-function updateData(){
+function update(){
 
 packet++;
 
-let t=Math.floor((Date.now()-start)/1000);
-document.getElementById("time").innerText=t+" s";
-document.getElementById("packet").innerText=packet;
+let missionTime =
+Math.floor((Date.now()-start)/1000);
 
-let alt=100+Math.random()*20;
-let temp=25+Math.random()*10;
-let pres=1000+Math.random()*10;
-let volt=7+Math.random();
+document.getElementById("missionTime").innerText =
+missionTime+" s";
 
-document.getElementById("alt").innerText=alt.toFixed(2);
-document.getElementById("temp").innerText=temp.toFixed(2);
-document.getElementById("pres").innerText=pres.toFixed(2);
-document.getElementById("volt").innerText=volt.toFixed(2);
+document.getElementById("packet").innerText = packet;
 
-let lat=13.7563+(Math.random()-0.5)/1000;
-let lon=100.5018+(Math.random()-0.5)/1000;
+let alt = 100 + Math.random()*20;
+let temp = 25 + Math.random()*5;
+let pres = 1000 + Math.random()*10;
+let volt = 7 + Math.random();
 
-document.getElementById("lat").innerText=lat.toFixed(6);
-document.getElementById("lon").innerText=lon.toFixed(6);
-document.getElementById("gpstime").innerText=new Date().toLocaleTimeString();
+document.getElementById("altitude").innerText = alt.toFixed(2);
+document.getElementById("temperature").innerText = temp.toFixed(2);
+document.getElementById("pressure").innerText = pres.toFixed(2);
+document.getElementById("voltage").innerText = volt.toFixed(2);
+
+let lat = 13.7563 + (Math.random()-0.5)/1000;
+let lon = 100.5018 + (Math.random()-0.5)/1000;
+
+document.getElementById("lat").innerText = lat.toFixed(6);
+document.getElementById("lon").innerText = lon.toFixed(6);
+document.getElementById("gpsTime").innerText =
+new Date().toLocaleTimeString();
 
 marker.setLatLng([lat,lon]);
 
-let select=document.getElementById("graphSelect").value;
-let val=alt;
-if(select==="temperature") val=temp;
-if(select==="pressure") val=pres;
-if(select==="voltage") val=volt;
+let select = document.getElementById("graphSelect").value;
+let value = alt;
+if(select==="temperature") value=temp;
+if(select==="pressure") value=pres;
+if(select==="voltage") value=volt;
 
 chart.data.labels.push(packet);
-chart.data.datasets[0].data.push(val);
+chart.data.datasets[0].data.push(value);
 
 if(chart.data.labels.length>20){
 chart.data.labels.shift();
@@ -217,8 +234,9 @@ chart.data.datasets[0].data.shift();
 chart.update();
 }
 
-setInterval(updateData,1000);
+setInterval(update,1000);
 
 </script>
+
 </body>
 </html>
