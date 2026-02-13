@@ -1,34 +1,33 @@
-/* =========================
-   CHART SECTION
-========================= */
+document.addEventListener("DOMContentLoaded", function(){
+
+/* =====================
+   CHART FUNCTION
+===================== */
 
 function createChart(id,label,color){
-    return new Chart(
-        document.getElementById(id),
-        {
-            type:'line',
-            data:{
-                labels:[],
-                datasets:[{
-                    label:label,
-                    data:[],
-                    borderColor:color,
-                    tension:0.4
-                }]
+    return new Chart(document.getElementById(id),{
+        type:'line',
+        data:{
+            labels:[],
+            datasets:[{
+                label:label,
+                data:[],
+                borderColor:color,
+                tension:0.4
+            }]
+        },
+        options:{
+            animation:false,
+            responsive:true,
+            scales:{
+                x:{display:false},
+                y:{ticks:{color:'white'}}
             },
-            options:{
-                animation:false,
-                responsive:true,
-                scales:{
-                    x:{display:false},
-                    y:{ticks:{color:'white'}}
-                },
-                plugins:{
-                    legend:{labels:{color:'white'}}
-                }
+            plugins:{
+                legend:{labels:{color:'white'}}
             }
         }
-    );
+    });
 }
 
 const altChart = createChart('altChart','Altitude','#00ffaa');
@@ -37,20 +36,18 @@ const voltChart = createChart('voltChart','Voltage','#ffaa00');
 const pressChart = createChart('pressChart','Pressure','#55aaff');
 
 function pushData(chart,value){
-
     if(chart.data.labels.length>30){
         chart.data.labels.shift();
         chart.data.datasets[0].data.shift();
     }
-
     chart.data.labels.push("");
     chart.data.datasets[0].data.push(value);
     chart.update();
 }
 
-/* =========================
-   MAP SECTION
-========================= */
+/* =====================
+   MAP
+===================== */
 
 let map = L.map('map').setView([13.731995,100.775850],15);
 
@@ -61,9 +58,9 @@ L.tileLayer(
 
 let marker = L.marker([13.731995,100.775850]).addTo(map);
 
-/* =========================
+/* =====================
    DEMO TELEMETRY
-========================= */
+===================== */
 
 let t = 0;
 
@@ -84,7 +81,6 @@ setInterval(()=>{
     document.getElementById("temp").innerText = temp.toFixed(1);
     document.getElementById("voltage").innerText = voltage.toFixed(2);
     document.getElementById("pressure").innerText = pressure.toFixed(1);
-
     document.getElementById("lat").innerText = lat.toFixed(6);
     document.getElementById("lon").innerText = lon.toFixed(6);
 
@@ -94,6 +90,7 @@ setInterval(()=>{
     pushData(pressChart,pressure);
 
     marker.setLatLng([lat,lon]);
-    map.panTo([lat,lon]);
 
 },1000);
+
+});
