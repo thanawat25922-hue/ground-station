@@ -1,39 +1,53 @@
 document.addEventListener("DOMContentLoaded", function(){
 
-/* =====================
-   CHART FUNCTION
-===================== */
+function createChart(id,label,unit,color){
 
-function createChart(id,label,color){
     return new Chart(document.getElementById(id),{
         type:'line',
         data:{
             labels:[],
             datasets:[{
-                label:label,
+                label: label + " ("+unit+")",
                 data:[],
                 borderColor:color,
-                tension:0.4
+                tension:0.3
             }]
         },
         options:{
             animation:false,
             responsive:true,
             scales:{
-                x:{display:false},
-                y:{ticks:{color:'white'}}
+                x:{
+                    ticks:{color:'white'}
+                },
+                y:{
+                    ticks:{
+                        color:'white',
+                        font:{size:14}
+                    },
+                    title:{
+                        display:true,
+                        text:unit,
+                        color:'white'
+                    }
+                }
             },
             plugins:{
-                legend:{labels:{color:'white'}}
+                legend:{
+                    labels:{
+                        color:'white',
+                        font:{size:14}
+                    }
+                }
             }
         }
     });
 }
 
-const altChart = createChart('altChart','Altitude','#00ffaa');
-const tempChart = createChart('tempChart','Temperature','#ff5555');
-const voltChart = createChart('voltChart','Voltage','#ffaa00');
-const pressChart = createChart('pressChart','Pressure','#55aaff');
+const altChart = createChart('altChart','Altitude','m','#00ffaa');
+const tempChart = createChart('tempChart','Temperature','°C','#ff5555');
+const voltChart = createChart('voltChart','Voltage','V','#ffaa00');
+const pressChart = createChart('pressChart','Pressure','hPa','#55aaff');
 
 function pushData(chart,value){
     if(chart.data.labels.length>30){
@@ -45,10 +59,7 @@ function pushData(chart,value){
     chart.update();
 }
 
-/* =====================
-   MAP
-===================== */
-
+/* MAP */
 let map = L.map('map').setView([13.731995,100.775850],15);
 
 L.tileLayer(
@@ -58,11 +69,9 @@ L.tileLayer(
 
 let marker = L.marker([13.731995,100.775850]).addTo(map);
 
-/* =====================
-   DEMO TELEMETRY
-===================== */
+/* DEMO DATA */
 
-let t = 0;
+let t=0;
 
 setInterval(()=>{
 
