@@ -1,86 +1,57 @@
 body{
     margin:0;
-    font-family:Segoe UI, Arial;
+    font-family:Segoe UI;
     background:#0b1220;
     color:white;
 }
 
-/* ===== MAIN LAYOUT ===== */
+/* ===== GRID 2x2 ===== */
 
-.main{
-    display:flex;
+.grid-container{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr;
     height:100vh;
 }
 
-/* ===== PANELS ===== */
-
-.panel{
-    padding:20px;
+.box{
+    border:2px solid #1e293b;
+    padding:15px;
+    box-sizing:border-box;
 }
 
-.telemetry{
-    width:28%;
-    background:#0f172a;
-    border-right:2px solid #1e293b;
-}
+/* ===== TELEMETRY ===== */
 
-.right{
-    width:72%;
-    overflow:auto;
-}
-
-/* ===== TELEMETRY BLOCK ===== */
-
-.grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-}
-
-.card{
-    background:#111827;
-    padding:14px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,0.3);
-}
-
-.label{
-    font-size:12px;
-    color:#9ca3af;
-}
-
-.big{
-    font-size:28px;
-    font-weight:bold;
-    color:#22c55e;
-}
-
-.big.small{
+table{
+    width:100%;
+    border-collapse:collapse;
     font-size:18px;
 }
 
-/* ===== CHART ===== */
-
-.chartCard{
-    background:#0f172a;
-    border-radius:12px;
-    padding:10px;
-    margin-bottom:18px;
+td{
+    padding:8px;
+    border-bottom:1px solid #1e293b;
 }
 
-canvas{
-    height:230px !important;
+td:last-child{
+    text-align:right;
+    color:#22c55e;
+    font-weight:bold;
 }
 
 /* ===== MAP ===== */
 
-.mapCard{
-    background:#0f172a;
-    padding:10px;
-    border-radius:12px;
+#map{
+    width:100%;
+    height:100%;
 }
 
-#map{
-    height:350px;
-    border-radius:10px;
+/* ===== RESERVED ===== */
+
+.reserved{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    color:#6b7280;
 }
