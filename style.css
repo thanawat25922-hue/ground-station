@@ -23,7 +23,7 @@ body{
 
 .grid{
     display:grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:1fr 1fr;
     gap:8px;
 }
 
@@ -43,5 +43,10 @@ canvas{
     height:220px !important;
     margin-bottom:25px;
     background:#0f172a;
+    border-radius:10px;
+}
+
+#map{
+    height:350px;
     border-radius:10px;
 }
