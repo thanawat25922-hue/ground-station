@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ground Station</title>
+<title>Ground Station Telemetry</title>
 
+<!-- Leaflet Map -->
 <link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
@@ -18,15 +20,17 @@ body{
     font-family:Arial, Helvetica, sans-serif;
     background:#071426;
     color:white;
+    overflow:hidden;
 }
 
 .container{
     display:grid;
     grid-template-columns:1fr 1fr;
-    grid-template-rows:1fr 1fr;
+    grid-template-rows:50vh 50vh;
     height:100vh;
     gap:8px;
     padding:8px;
+    box-sizing:border-box;
 }
 
 .panel{
@@ -34,19 +38,22 @@ body{
     border-radius:10px;
     padding:15px;
     box-shadow:0 0 10px rgba(0,0,0,0.4);
+    overflow:hidden;
 }
 
 h2{
     margin-top:0;
 }
 
+/* TELEMETRY */
 .telemetry-table{
     width:100%;
     border-collapse:collapse;
+    font-size:14px;
 }
 
 .telemetry-table td{
-    padding:8px;
+    padding:7px;
     border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
@@ -56,24 +63,35 @@ h2{
     font-weight:bold;
 }
 
+/* MAP */
 #map{
+    width:100%;
     height:100%;
     border-radius:10px;
 }
 
+/* GRAPH */
 .graph-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
     grid-template-rows:1fr 1fr;
     gap:10px;
-    height:90%;
+    height:calc(100% - 40px);
 }
 
-canvas{
-    background:#071426;
-    border-radius:10px;
+.graph-box{
+    position:relative;
+    width:100%;
+    height:100%;
 }
 
+.graph-box canvas{
+    position:absolute;
+    width:100% !important;
+    height:100% !important;
+}
+
+/* RESERVED */
 .reserved{
     display:flex;
     justify-content:center;
@@ -89,152 +107,98 @@ canvas{
 
 <div class="container">
 
-<!-- TELEMETRY -->
-<div class="panel">
-<h2>Telemetry</h2>
+    <!-- TELEMETRY -->
+    <div class="panel">
+        <h2>Telemetry</h2>
+        <table class="telemetry-table">
+            <tr><td>TEAM ID</td><td class="value">G2</td><td>MISSION TIME</td><td class="value">00:02:31</td></tr>
+            <tr><td>PACKET COUNT</td><td class="value">21</td><td>MODE</td><td class="value">FLIGHT</td></tr>
+            <tr><td>VOLTAGE</td><td class="value">6.74 V</td><td>STATE</td><td class="value">ASCENT</td></tr>
+            <tr><td>ALTITUDE</td><td class="value">179.9 m</td><td>GYRO PITCH</td><td class="value">1.2°</td></tr>
+            <tr><td>PRESSURE</td><td class="value">998.2 hPa</td><td>GYRO ROLL</td><td class="value">0.5°</td></tr>
+            <tr><td>TEMPERATURE</td><td class="value">23.3 °C</td><td>GYRO YAW</td><td class="value">180°</td></tr>
+            <tr><td>HUMIDITY</td><td class="value">54 %</td><td>ACCEL PITCH</td><td class="value">0.02 g</td></tr>
+            <tr><td>ACCEL YAW</td><td class="value">0.01 g</td><td>ACCEL ROLL</td><td class="value">0.03 g</td></tr>
+            <tr><td>GPS STATE</td><td class="value">LOCK</td><td>GPS TIME</td><td class="value">16:09:21</td></tr>
+            <tr><td>GPS LONGITUDE</td><td class="value">100.776348</td><td>GPS LATITUDE</td><td class="value">13.732862</td></tr>
+        </table>
+    </div>
 
-<table class="telemetry-table">
+    <!-- GRAPHS -->
+    <div class="panel">
+        <h2>Graphs</h2>
 
-<tr>
-<td>TEAM ID</td>
-<td class="value" id="team">G2</td>
-<td>MISSION TIME</td>
-<td class="value" id="mission">00:02:31</td>
-</tr>
+        <div class="graph-grid">
+            <div class="graph-box"><canvas id="altChart"></canvas></div>
+            <div class="graph-box"><canvas id="tempChart"></canvas></div>
+            <div class="graph-box"><canvas id="pressChart"></canvas></div>
+            <div class="graph-box"><canvas id="voltChart"></canvas></div>
+        </div>
+    </div>
 
-<tr>
-<td>PACKET COUNT</td>
-<td class="value" id="packet">21</td>
-<td>MODE</td>
-<td class="value" id="mode">FLIGHT</td>
-</tr>
+    <!-- MAP -->
+    <div class="panel">
+        <div id="map"></div>
+    </div>
 
-<tr>
-<td>VOLTAGE</td>
-<td class="value" id="voltage">6.74 V</td>
-<td>STATE</td>
-<td class="value" id="state">ASCENT</td>
-</tr>
-
-<tr>
-<td>ALTITUDE</td>
-<td class="value" id="altitude">179.9 m</td>
-<td>GYRO PITCH</td>
-<td class="value" id="gyro_pitch">1.2 °</td>
-</tr>
-
-<tr>
-<td>PRESSURE</td>
-<td class="value" id="pressure">998.2 hPa</td>
-<td>GYRO ROLL</td>
-<td class="value" id="gyro_roll">0.5 °</td>
-</tr>
-
-<tr>
-<td>TEMPERATURE</td>
-<td class="value" id="temperature">23.3 °C</td>
-<td>GYRO YAW</td>
-<td class="value" id="gyro_yaw">180 °</td>
-</tr>
-
-<tr>
-<td>HUMIDITY</td>
-<td class="value" id="humidity">54 %</td>
-<td>ACCEL PITCH</td>
-<td class="value" id="acc_pitch">0.02 g</td>
-</tr>
-
-<tr>
-<td>ACCEL YAW</td>
-<td class="value" id="acc_yaw">0.01 g</td>
-<td>ACCEL ROLL</td>
-<td class="value" id="acc_roll">0.03 g</td>
-</tr>
-
-<tr>
-<td>GPS STATE</td>
-<td class="value" id="gps_state">LOCK</td>
-<td>GPS TIME</td>
-<td class="value" id="gps_time">16:09:21</td>
-</tr>
-
-<tr>
-<td>GPS LONGITUDE</td>
-<td class="value" id="lon">100.776348</td>
-<td>GPS LATITUDE</td>
-<td class="value" id="lat">13.732862</td>
-</tr>
-
-</table>
-</div>
-
-<!-- GRAPHS -->
-<div class="panel">
-<h2>Graphs</h2>
-
-<div class="graph-grid">
-<canvas id="altChart"></canvas>
-<canvas id="tempChart"></canvas>
-<canvas id="voltChart"></canvas>
-<canvas id="pressChart"></canvas>
-</div>
-
-</div>
-
-<!-- MAP -->
-<div class="panel">
-<div id="map"></div>
-</div>
-
-<!-- RESERVED -->
-<div class="panel reserved">
-RESERVED
-</div>
+    <!-- RESERVED -->
+    <div class="panel reserved">
+        RESERVED
+    </div>
 
 </div>
 
 <script>
 
-// ---------- MAP ----------
-var map = L.map('map').setView([13.732862,100.776348],16);
+/* ---------- MAP ---------- */
+var map = L.map('map').setView([13.732862,100.776348],15);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19
+    attribution:'© OpenStreetMap'
 }).addTo(map);
 
-var marker = L.marker([13.732862,100.776348]).addTo(map);
+L.marker([13.732862,100.776348]).addTo(map);
 
 
-// ---------- GRAPH FUNCTION ----------
-function createChart(id,label,unit){
+/* ---------- GRAPH TEMPLATE ---------- */
+function createChart(id,label,unit,data,color){
     return new Chart(document.getElementById(id),{
         type:'line',
         data:{
-            labels:[1,2,3,4,5,6,7,8,9,10],
+            labels:[1,2,3,4,5,6,7,8],
             datasets:[{
                 label:label+" ("+unit+")",
-                data:[10,12,15,13,17,20,18,19,21,22],
-                borderColor:'#00ff9c',
+                data:data,
+                borderColor:color,
                 tension:0.3
             }]
         },
         options:{
             responsive:true,
+            maintainAspectRatio:false,
             plugins:{
-                legend:{labels:{color:'white'}}
+                legend:{labels:{color:"white"}}
             },
             scales:{
-                x:{ticks:{color:'white'}},
-                y:{ticks:{color:'white'}}
+                x:{ticks:{color:"white"}},
+                y:{ticks:{color:"white"}}
             }
         }
     });
 }
 
-createChart("altChart","Altitude","m");
-createChart("tempChart","Temperature","°C");
-createChart("voltChart","Voltage","V");
-createChart("pressChart","Pressure","hPa");
+/* ---------- CREATE 4 GRAPHS ---------- */
+createChart("altChart","Altitude","m",
+[170,175,180,185,182,170,160,179],"#00ff9c");
+
+createChart("tempChart","Temperature","°C",
+[23,23.1,23.3,23.4,23.2,23.0,23.1,23.3],"#ffaa00");
+
+createChart("pressChart","Pressure","hPa",
+[999,998.8,998.5,998.2,998.4,998.7,998.9,998.2],"#00c8ff");
+
+createChart("voltChart","Voltage","V",
+[6.8,6.78,6.76,6.75,6.74,6.73,6.74,6.74],"#ff4d6d");
 
 </script>
 
