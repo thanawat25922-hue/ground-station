@@ -8,77 +8,85 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Leaflet Map -->
 <link rel="stylesheet"
 href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </head>
 
 <body>
 
-<div class="container">
+<div class="main">
 
-    <!-- LEFT PANEL -->
-    <div class="telemetry">
+    <!-- LEFT TELEMETRY -->
+    <div class="panel telemetry">
 
         <h2>TELEMETRY</h2>
 
-        <div class="row">
-            <span>TEAM ID</span>
-            <span class="value" id="team">G2</span>
-        </div>
+        <div class="grid">
 
-        <div class="row">
-            <span>PACKET</span>
-            <span class="value" id="packet">0</span>
-        </div>
+            <div class="card">
+                <div class="label">PACKET</div>
+                <div class="big" id="packet">0</div>
+            </div>
 
-        <div class="row">
-            <span>ALTITUDE</span>
-            <span class="value"><span id="altitude">0</span> m</span>
-        </div>
+            <div class="card">
+                <div class="label">ALTITUDE</div>
+                <div class="big"><span id="altitude">0</span> m</div>
+            </div>
 
-        <div class="row">
-            <span>TEMPERATURE</span>
-            <span class="value"><span id="temp">0</span> °C</span>
-        </div>
+            <div class="card">
+                <div class="label">TEMPERATURE</div>
+                <div class="big"><span id="temp">0</span> °C</div>
+            </div>
 
-        <div class="row">
-            <span>VOLTAGE</span>
-            <span class="value"><span id="voltage">0</span> V</span>
-        </div>
+            <div class="card">
+                <div class="label">VOLTAGE</div>
+                <div class="big"><span id="voltage">0</span> V</div>
+            </div>
 
-        <div class="row">
-            <span>PRESSURE</span>
-            <span class="value"><span id="pressure">0</span> hPa</span>
-        </div>
+            <div class="card">
+                <div class="label">PRESSURE</div>
+                <div class="big"><span id="pressure">0</span> hPa</div>
+            </div>
 
-        <div class="row">
-            <span>GPS LAT</span>
-            <span class="value" id="lat">0</span>
-        </div>
+            <div class="card">
+                <div class="label">GPS LAT</div>
+                <div class="big small" id="lat">0</div>
+            </div>
 
-        <div class="row">
-            <span>GPS LON</span>
-            <span class="value" id="lon">0</span>
-        </div>
+            <div class="card">
+                <div class="label">GPS LON</div>
+                <div class="big small" id="lon">0</div>
+            </div>
 
+        </div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="right">
+    <!-- RIGHT SIDE -->
+    <div class="panel right">
 
-        <canvas id="altChart"></canvas>
-        <canvas id="tempChart"></canvas>
-        <canvas id="voltChart"></canvas>
-        <canvas id="pressChart"></canvas>
+        <div class="chartCard">
+            <canvas id="altChart"></canvas>
+        </div>
 
-        <div id="map"></div>
+        <div class="chartCard">
+            <canvas id="tempChart"></canvas>
+        </div>
+
+        <div class="chartCard">
+            <canvas id="voltChart"></canvas>
+        </div>
+
+        <div class="chartCard">
+            <canvas id="pressChart"></canvas>
+        </div>
+
+        <div class="mapCard">
+            <div id="map"></div>
+        </div>
 
     </div>
 
