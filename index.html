@@ -5,6 +5,7 @@
 <title>Ground Station Telemetry</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <link rel="stylesheet"
  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -39,10 +40,6 @@ body{
     color:#2cff9a;
     font-weight:bold;
 }
-.battery-normal{
-    color:#2cff9a;
-    font-weight:bold;
-}
 .battery-low{
     color:#ff4444;
     font-weight:bold;
@@ -50,6 +47,9 @@ body{
 #map{
     height:100%;
     border-radius:10px;
+}
+canvas{
+    height:90% !important;
 }
 </style>
 </head>
@@ -75,7 +75,7 @@ body{
 
 <!-- GRAPH -->
 <div class="block">
-<h2>Graphs</h2>
+<h2>Altitude Graph (m)</h2>
 <canvas id="chart"></canvas>
 </div>
 
@@ -88,15 +88,13 @@ body{
 <div class="block">
 <h2>CAN SAT STATUS</h2>
 
-<div class="telemetry-row"><span>STATUS</span><span id="status" class="value">CONNECTED</span></div>
+<div class="telemetry-row"><span>STATUS</span><span class="value">CONNECTED</span></div>
 <div class="telemetry-row"><span>FLIGHT PHASE</span><span id="phase" class="value">IDLE</span></div>
 <div class="telemetry-row"><span>DESCENT RATE</span><span id="descent" class="value">0 m/s</span></div>
-
 <div class="telemetry-row">
 <span>BATTERY</span>
-<span id="batteryStatus" class="battery-normal">NORMAL</span>
+<span id="batteryStatus" class="value">NORMAL</span>
 </div>
-
 <div class="telemetry-row"><span>LAST PACKET</span><span id="lastpacket" class="value">--:--:--</span></div>
 
 </div>
@@ -105,23 +103,53 @@ body{
 
 <script>
 
-let lastAltitude = 0;
-let phase = "IDLE";
-
-/* CLOCK */
+/* ===== REAL CLOCK ===== */
 function updateRealTime(){
     document.getElementById("mission").innerText =
         new Date().toLocaleTimeString();
 }
 
-/* MAP */
+/* ===== MAP ===== */
 let map = L.map('map').setView([13.73,100.77],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
 .addTo(map);
 let marker = L.marker([13.73,100.77]).addTo(map);
 
-/* SIMULATION */
-let packet = 0;
+/* ===== GRAPH DATA ===== */
+let telemetry = {
+    labels:[],
+    altitude:[]
+};
+
+let ctx = document.getElementById('chart');
+
+let chart = new Chart(ctx,{
+    type:'line',
+    data:{
+        labels:[],
+        datasets:[{
+            label:'Altitude (m)',
+            data:[],
+            borderColor:'#2cff9a',
+            tension:0.3
+        }]
+    },
+    options:{
+        responsive:true,
+        animation:false,
+        scales:{
+            y:{ticks:{color:'white'}},
+            x:{ticks:{color:'white'}}
+        },
+        plugins:{
+            legend:{labels:{color:'white'}}
+        }
+    }
+});
+
+/* ===== SIMULATION ===== */
+let packet=0;
+let lastAltitude=0;
 
 setInterval(()=>{
 
@@ -131,22 +159,16 @@ setInterval(()=>{
     let alt = 170 + Math.sin(packet/5)*15;
     let temp = 25 + Math.sin(packet/10)*2;
     let press = 1000 + Math.sin(packet/8)*3;
-    let volt = 7.4 - packet*0.01;   // ลดเร็วหน่อยเพื่อให้เห็น LOW
+    let volt = 7.4 - packet*0.01;
 
     let lat = 13.7328 + Math.sin(packet/20)*0.001;
     let lon = 100.7763 + Math.cos(packet/20)*0.001;
 
-    /* DESCENT RATE */
-    let descentRate = (lastAltitude - alt);
+    /* descent rate */
+    let descentRate = lastAltitude - alt;
     lastAltitude = alt;
 
-    /* FLIGHT PHASE */
-    if(packet < 5) phase = "IDLE";
-    else if(descentRate < -0.2) phase = "ASCENT";
-    else if(descentRate > 0.2) phase = "DESCENT";
-    else phase = "LANDED";
-
-    /* UPDATE TELEMETRY */
+    /* telemetry update */
     document.getElementById("packet").innerText = packet;
     document.getElementById("alt").innerText = alt.toFixed(1)+" m";
     document.getElementById("temp").innerText = temp.toFixed(1)+" °C";
@@ -155,20 +177,31 @@ setInterval(()=>{
     document.getElementById("lat").innerText = lat.toFixed(6);
     document.getElementById("lon").innerText = lon.toFixed(6);
     document.getElementById("descent").innerText = descentRate.toFixed(2)+" m/s";
-    document.getElementById("phase").innerText = phase;
     document.getElementById("lastpacket").innerText =
         new Date().toLocaleTimeString();
 
-    /* BATTERY WARNING */
-    let batteryEl = document.getElementById("batteryStatus");
-
+    /* battery warning */
+    let battery = document.getElementById("batteryStatus");
     if(volt < 6.8){
-        batteryEl.innerText = "LOW ⚠";
-        batteryEl.className = "battery-low";
+        battery.innerText="LOW ⚠";
+        battery.className="battery-low";
     }else{
-        batteryEl.innerText = "NORMAL";
-        batteryEl.className = "battery-normal";
+        battery.innerText="NORMAL";
+        battery.className="value";
     }
+
+    /* graph update */
+    telemetry.labels.push(packet);
+    telemetry.altitude.push(alt);
+
+    if(telemetry.labels.length>20){
+        telemetry.labels.shift();
+        telemetry.altitude.shift();
+    }
+
+    chart.data.labels = telemetry.labels;
+    chart.data.datasets[0].data = telemetry.altitude;
+    chart.update();
 
     marker.setLatLng([lat,lon]);
 
