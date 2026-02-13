@@ -8,7 +8,6 @@
 
 <link rel="stylesheet"
  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
@@ -34,10 +33,6 @@ body{
     padding:15px;
 }
 
-h2{
-    margin-top:0;
-}
-
 .telemetry-row{
     display:flex;
     justify-content:space-between;
@@ -50,18 +45,11 @@ h2{
     font-weight:bold;
 }
 
-/* STATUS COLOR */
-.status{
-    font-weight:bold;
-}
+.status{ font-weight:bold; }
 .status.connected{ color:#00ff88; }
 .status.disconnected{ color:#ff4444; }
-.status.lost{ color:#ffaa00; }
 
-#map{
-    height:100%;
-    border-radius:10px;
-}
+#map{ height:100%; border-radius:10px; }
 
 button{
     background:#132f46;
@@ -71,9 +59,6 @@ button{
     margin-right:5px;
     border-radius:6px;
     cursor:pointer;
-}
-button:hover{
-    background:#1d4666;
 }
 </style>
 </head>
@@ -98,6 +83,13 @@ button:hover{
 <div class="telemetry-row"><span>GPS LATITUDE</span><span id="lat" class="value">0</span></div>
 <div class="telemetry-row"><span>GPS LONGITUDE</span><span id="lon" class="value">0</span></div>
 
+<div class="telemetry-row"><span>ACC X</span><span id="ax" class="value">0 m/s²</span></div>
+<div class="telemetry-row"><span>ACC Y</span><span id="ay" class="value">0 m/s²</span></div>
+<div class="telemetry-row"><span>ACC Z</span><span id="az" class="value">0 m/s²</span></div>
+<div class="telemetry-row"><span>ACC MAG</span><span id="amag" class="value">0 m/s²</span></div>
+
+<div class="telemetry-row"><span>DESCENT RATE</span><span id="descent" class="value">0 m/s</span></div>
+
 </div>
 
 <!-- GRAPH -->
@@ -117,163 +109,118 @@ button:hover{
 <div id="map"></div>
 </div>
 
-<!-- STATUS BLOCK -->
+<!-- STATUS -->
 <div class="block">
 <h2>Connection</h2>
-
 <div class="telemetry-row">
 <span>CAN SAT STATUS</span>
-<span id="cansatStatus" class="status disconnected">
-● DISCONNECTED
-</span>
+<span id="cansatStatus" class="status disconnected">● DISCONNECTED</span>
 </div>
-
 </div>
 
 </div>
 
 <script>
 
-/* ---------- REAL CLOCK ---------- */
+/* CLOCK */
 function updateRealTime(){
-    let now = new Date();
-    let h = String(now.getHours()).padStart(2,'0');
-    let m = String(now.getMinutes()).padStart(2,'0');
-    let s = String(now.getSeconds()).padStart(2,'0');
-
     document.getElementById("mission").innerText =
-        h + ":" + m + ":" + s;
+        new Date().toLocaleTimeString();
 }
 
-/* ---------- DATA ---------- */
-let telemetry = {
-    labels:[],
-    altitude:[],
-    temperature:[],
-    pressure:[],
-    voltage:[]
+/* DATA */
+let telemetry={
+ labels:[], altitude:[], temperature:[], pressure:[], voltage:[]
 };
 
-let packet = 0;
-const statusEl = document.getElementById("cansatStatus");
+let packet=0;
+let lastAlt=0;
+const statusEl=document.getElementById("cansatStatus");
 
-/* ---------- CHART ---------- */
-let ctx = document.getElementById('chart');
-
-let chart = new Chart(ctx,{
-    type:'line',
-    data:{
-        labels:[],
-        datasets:[{
-            label:'Altitude (m)',
-            data:[],
-            borderColor:'#2cff9a',
-            tension:0.3
-        }]
-    },
-    options:{
-        responsive:true,
-        scales:{
-            y:{ticks:{color:'white'}},
-            x:{ticks:{color:'white'}}
-        },
-        plugins:{
-            legend:{labels:{color:'white'}}
-        }
-    }
+/* CHART */
+let chart=new Chart(document.getElementById('chart'),{
+ type:'line',
+ data:{labels:[],datasets:[{label:'Altitude (m)',data:[],borderColor:'#2cff9a',tension:0.3}]},
+ options:{responsive:true,animation:false}
 });
 
 let currentGraph="alt";
 
 function selectGraph(type){
-    currentGraph = type;
-    updateGraph();
+ currentGraph=type;
 }
 
 function updateGraph(){
+ let data=[];
+ if(currentGraph==="alt"){ data=telemetry.altitude; chart.data.datasets[0].label="Altitude (m)";}
+ if(currentGraph==="temp"){ data=telemetry.temperature; chart.data.datasets[0].label="Temperature (°C)";}
+ if(currentGraph==="press"){ data=telemetry.pressure; chart.data.datasets[0].label="Pressure (hPa)";}
+ if(currentGraph==="volt"){ data=telemetry.voltage; chart.data.datasets[0].label="Voltage (V)";}
 
-    let dataset;
-
-    if(currentGraph==="alt"){
-        dataset = telemetry.altitude;
-        chart.data.datasets[0].label="Altitude (m)";
-    }
-
-    if(currentGraph==="temp"){
-        dataset = telemetry.temperature;
-        chart.data.datasets[0].label="Temperature (°C)";
-    }
-
-    if(currentGraph==="press"){
-        dataset = telemetry.pressure;
-        chart.data.datasets[0].label="Pressure (hPa)";
-    }
-
-    if(currentGraph==="volt"){
-        dataset = telemetry.voltage;
-        chart.data.datasets[0].label="Voltage (V)";
-    }
-
-    chart.data.labels = telemetry.labels;
-    chart.data.datasets[0].data = dataset;
-    chart.update();
+ chart.data.labels=telemetry.labels;
+ chart.data.datasets[0].data=data;
+ chart.update();
 }
 
-/* ---------- MAP ---------- */
-let map = L.map('map').setView([13.73,100.77],15);
+/* MAP */
+let map=L.map('map').setView([13.73,100.77],15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let marker=L.marker([13.73,100.77]).addTo(map);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-.addTo(map);
-
-let marker = L.marker([13.73,100.77]).addTo(map);
-
-/* ---------- SIMULATION ---------- */
+/* SIMULATION */
 setInterval(()=>{
 
-    updateRealTime();
+ updateRealTime();
+ packet++;
 
-    packet++;
+ let alt=170+Math.sin(packet/5)*15;
+ let temp=25+Math.sin(packet/10)*2;
+ let press=1000+Math.sin(packet/8)*3;
+ let volt=7.4-packet*0.002;
 
-    let alt = 170 + Math.sin(packet/5)*15;
-    let temp = 25 + Math.sin(packet/10)*2;
-    let press = 1000 + Math.sin(packet/8)*3;
-    let volt = 7.4 - packet*0.002;
+ let ax=Math.sin(packet/3)*2;
+ let ay=Math.cos(packet/3)*2;
+ let az=9.81+Math.sin(packet/2);
+ let amag=Math.sqrt(ax*ax+ay*ay+az*az);
 
-    let lat = 13.7328 + Math.sin(packet/20)*0.001;
-    let lon = 100.7763 + Math.cos(packet/20)*0.001;
+ let descent=lastAlt-alt;
+ lastAlt=alt;
 
-    telemetry.labels.push(packet);
-    telemetry.altitude.push(alt);
-    telemetry.temperature.push(temp);
-    telemetry.pressure.push(press);
-    telemetry.voltage.push(volt);
+ let lat=13.7328+Math.sin(packet/20)*0.001;
+ let lon=100.7763+Math.cos(packet/20)*0.001;
 
-    if(telemetry.labels.length>20){
-        telemetry.labels.shift();
-        telemetry.altitude.shift();
-        telemetry.temperature.shift();
-        telemetry.pressure.shift();
-        telemetry.voltage.shift();
-    }
+ telemetry.labels.push(packet);
+ telemetry.altitude.push(alt);
+ telemetry.temperature.push(temp);
+ telemetry.pressure.push(press);
+ telemetry.voltage.push(volt);
 
-    document.getElementById("packet").innerText = packet;
-    document.getElementById("alt").innerText = alt.toFixed(1)+" m";
-    document.getElementById("temp").innerText = temp.toFixed(1)+" °C";
-    document.getElementById("press").innerText = press.toFixed(1)+" hPa";
-    document.getElementById("volt").innerText = volt.toFixed(2)+" V";
-    document.getElementById("lat").innerText = lat.toFixed(6);
-    document.getElementById("lon").innerText = lon.toFixed(6);
+ if(telemetry.labels.length>20){
+  Object.keys(telemetry).forEach(k=>telemetry[k].shift());
+ }
 
-    marker.setLatLng([lat,lon]);
+ document.getElementById("packet").innerText=packet;
+ document.getElementById("alt").innerText=alt.toFixed(1)+" m";
+ document.getElementById("temp").innerText=temp.toFixed(1)+" °C";
+ document.getElementById("press").innerText=press.toFixed(1)+" hPa";
+ document.getElementById("volt").innerText=volt.toFixed(2)+" V";
+ document.getElementById("lat").innerText=lat.toFixed(6);
+ document.getElementById("lon").innerText=lon.toFixed(6);
+ document.getElementById("ax").innerText=ax.toFixed(2)+" m/s²";
+ document.getElementById("ay").innerText=ay.toFixed(2)+" m/s²";
+ document.getElementById("az").innerText=az.toFixed(2)+" m/s²";
+ document.getElementById("amag").innerText=amag.toFixed(2)+" m/s²";
+ document.getElementById("descent").innerText=descent.toFixed(2)+" m/s";
 
-    statusEl.textContent = "● SIMULATION";
-    statusEl.className = "status connected";
+ marker.setLatLng([lat,lon]);
 
-    updateGraph();
+ statusEl.textContent="● SIMULATION";
+ statusEl.className="status connected";
+
+ updateGraph();
 
 },1000);
 
 </script>
-
 </body>
 </html>
