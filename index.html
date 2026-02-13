@@ -2,59 +2,71 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>CANSAT TELEMETRY</title>
+<title>CANSAT GROUND STATION</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #1e1e1e;
-    color: white;
+body{
+    margin:0;
+    font-family:Arial;
+    background:#1e1e1e;
+    color:white;
 }
 
-.container {
-    display: flex;
-    height: 100vh;
+.container{
+    display:grid;
+    grid-template-columns:35% 65%;
+    height:100vh;
 }
 
-.telemetry {
-    width: 35%;
-    background: #2b2b2b;
-    padding: 15px;
-    box-sizing: border-box;
+/* LEFT SIDE */
+.telemetry{
+    background:#2b2b2b;
+    padding:10px;
+    display:grid;
+    grid-template-rows:1fr 1fr;
+    gap:10px;
 }
 
-.telemetry h2 {
-    text-align: center;
-    margin-bottom: 15px;
+.block{
+    background:#333;
+    padding:10px;
+    border-radius:5px;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 15px;
+.block h3{
+    margin-top:0;
+    text-align:center;
 }
 
-.label {
-    font-size: 13px;
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px 10px;
+    font-size:13px;
 }
 
-.value {
-    color: #00ffcc;
-    font-weight: bold;
-    text-align: right;
+.value{
+    text-align:right;
+    color:#00ffcc;
 }
 
-.graph {
-    width: 65%;
-    padding: 20px;
-    box-sizing: border-box;
+/* RIGHT SIDE */
+.right{
+    display:grid;
+    grid-template-rows:55% 45%;
 }
 
-select {
-    margin-bottom: 10px;
-    padding: 5px;
+.graph{
+    padding:10px;
+}
+
+#map{
+    height:100%;
 }
 </style>
 </head>
@@ -63,13 +75,54 @@ select {
 
 <div class="container">
 
-    <!-- TELEMETRY -->
-    <div class="telemetry">
-        <h2>TELEMETRY</h2>
-        <div class="grid" id="telemetryGrid"></div>
+<!-- LEFT -->
+<div class="telemetry">
+
+    <div class="block">
+        <h3>MISSION</h3>
+        <div class="grid">
+            <div>TEAM ID</div><div class="value" id="team">2034</div>
+            <div>MISSION TIME</div><div class="value" id="time">0</div>
+            <div>PACKET COUNT</div><div class="value" id="packet">0</div>
+            <div>MODE</div><div class="value">FLIGHT</div>
+            <div>STATE</div><div class="value">ASCENT</div>
+            <div>VOLTAGE</div><div class="value" id="volt">0</div>
+        </div>
     </div>
 
-    <!-- GRAPH -->
+    <div class="block">
+        <h3>SENSORS</h3>
+        <div class="grid">
+            <div>ALTITUDE</div><div class="value" id="alt">0</div>
+            <div>PRESSURE</div><div class="value" id="pres">0</div>
+            <div>TEMPERATURE</div><div class="value" id="temp">0</div>
+        </div>
+    </div>
+
+    <div class="block">
+        <h3>GYRO</h3>
+        <div class="grid">
+            <div>PITCH</div><div class="value">1.2</div>
+            <div>ROLL</div><div class="value">0.8</div>
+            <div>YAW</div><div class="value">0.3</div>
+        </div>
+    </div>
+
+    <div class="block">
+        <h3>GPS</h3>
+        <div class="grid">
+            <div>STATE</div><div class="value">LOCK</div>
+            <div>LAT</div><div class="value" id="lat">0</div>
+            <div>LON</div><div class="value" id="lon">0</div>
+            <div>GPS TIME</div><div class="value" id="gpstime">0</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+
     <div class="graph">
         <select id="graphSelect">
             <option value="altitude">Altitude</option>
@@ -80,128 +133,92 @@ select {
         <canvas id="chart"></canvas>
     </div>
 
+    <div id="map"></div>
+
+</div>
+
 </div>
 
 <script>
-const fields = [
-"TEAM ID","MISSION TIME",
-"PACKET COUNT","MODE",
-"VOLTAGE","STATE",
-"ALTITUDE","GYRO PITCH",
-"PRESSURE","GYRO ROLL",
-"TEMPERATURE","GYRO YAW",
-"ACCELERATION YAW","ACCELERATION PITCH",
-"GPS STATE","ACCELERATION ROLL",
-"GPS LONGITUDE","GPS LATITUDE",
-"","GPS TIME"
-];
 
-const grid = document.getElementById("telemetryGrid");
+/* ===== MAP ===== */
+let map = L.map('map').setView([13.7563,100.5018],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+.addTo(map);
+let marker = L.marker([13.7563,100.5018]).addTo(map);
 
-let values = {};
-
-fields.forEach(name => {
-    const label = document.createElement("div");
-    label.className = "label";
-    label.innerText = name;
-
-    const value = document.createElement("div");
-    value.className = "value";
-    value.innerText = "0";
-
-    grid.appendChild(label);
-    grid.appendChild(value);
-
-    values[name] = value;
+/* ===== CHART ===== */
+let ctx=document.getElementById("chart");
+let chart=new Chart(ctx,{
+type:'line',
+data:{
+labels:[],
+datasets:[{
+label:"Altitude",
+data:[],
+borderColor:"#00ffcc",
+fill:false
+}]
+},
+options:{
+plugins:{legend:{labels:{color:"white"}}},
+scales:{
+x:{ticks:{color:"white"}},
+y:{ticks:{color:"white"}}
+}
+}
 });
 
-// ================= CHART =================
-const ctx = document.getElementById('chart').getContext('2d');
+/* ===== DATA ===== */
+let start=Date.now();
+let packet=0;
 
-let chartData = {
-    labels: [],
-    datasets: [{
-        label: "Altitude",
-        data: [],
-        borderColor: "#00ffcc",
-        fill: false
-    }]
-};
+function updateData(){
 
-let chart = new Chart(ctx, {
-    type: 'line',
-    data: chartData,
-    options: {
-        responsive: true,
-        scales: {
-            x: { ticks: { color: "white" }},
-            y: { ticks: { color: "white" }}
-        },
-        plugins: {
-            legend: { labels: { color: "white" }}
-        }
-    }
-});
+packet++;
 
-// ================= DATA UPDATE =================
-let startTime = Date.now();
-let packet = 0;
+let t=Math.floor((Date.now()-start)/1000);
+document.getElementById("time").innerText=t+" s";
+document.getElementById("packet").innerText=packet;
 
-function updateData() {
+let alt=100+Math.random()*20;
+let temp=25+Math.random()*10;
+let pres=1000+Math.random()*10;
+let volt=7+Math.random();
 
-    packet++;
+document.getElementById("alt").innerText=alt.toFixed(2);
+document.getElementById("temp").innerText=temp.toFixed(2);
+document.getElementById("pres").innerText=pres.toFixed(2);
+document.getElementById("volt").innerText=volt.toFixed(2);
 
-    let missionTime = Math.floor((Date.now() - startTime) / 1000);
+let lat=13.7563+(Math.random()-0.5)/1000;
+let lon=100.5018+(Math.random()-0.5)/1000;
 
-    let alt = 100 + Math.random()*20;
-    let temp = 25 + Math.random()*10;
-    let pres = 1000 + Math.random()*15;
-    let volt = 7.2 + Math.random()*1.2;
+document.getElementById("lat").innerText=lat.toFixed(6);
+document.getElementById("lon").innerText=lon.toFixed(6);
+document.getElementById("gpstime").innerText=new Date().toLocaleTimeString();
 
-    // update telemetry
-    values["TEAM ID"].innerText = "2034";
-    values["MISSION TIME"].innerText = missionTime + " s";
-    values["PACKET COUNT"].innerText = packet;
-    values["MODE"].innerText = "FLIGHT";
-    values["VOLTAGE"].innerText = volt.toFixed(2) + " V";
-    values["STATE"].innerText = "ASCENT";
-    values["ALTITUDE"].innerText = alt.toFixed(2) + " m";
-    values["PRESSURE"].innerText = pres.toFixed(2) + " hPa";
-    values["TEMPERATURE"].innerText = temp.toFixed(2) + " °C";
-    values["GYRO PITCH"].innerText = "1.2";
-    values["GYRO ROLL"].innerText = "0.8";
-    values["GYRO YAW"].innerText = "0.3";
-    values["ACCELERATION PITCH"].innerText = "0.02";
-    values["ACCELERATION ROLL"].innerText = "0.01";
-    values["ACCELERATION YAW"].innerText = "0.00";
-    values["GPS STATE"].innerText = "LOCK";
-    values["GPS LATITUDE"].innerText = "13.7563";
-    values["GPS LONGITUDE"].innerText = "100.5018";
-    values["GPS TIME"].innerText = new Date().toLocaleTimeString();
+marker.setLatLng([lat,lon]);
 
-    // graph update
-    chartData.labels.push(packet);
+let select=document.getElementById("graphSelect").value;
+let val=alt;
+if(select==="temperature") val=temp;
+if(select==="pressure") val=pres;
+if(select==="voltage") val=volt;
 
-    let selected = document.getElementById("graphSelect").value;
+chart.data.labels.push(packet);
+chart.data.datasets[0].data.push(val);
 
-    if(selected === "altitude") chartData.datasets[0].data.push(alt);
-    if(selected === "temperature") chartData.datasets[0].data.push(temp);
-    if(selected === "pressure") chartData.datasets[0].data.push(pres);
-    if(selected === "voltage") chartData.datasets[0].data.push(volt);
-
-    chartData.datasets[0].label =
-        selected.charAt(0).toUpperCase() + selected.slice(1);
-
-    if(chartData.labels.length > 20){
-        chartData.labels.shift();
-        chartData.datasets[0].data.shift();
-    }
-
-    chart.update();
+if(chart.data.labels.length>20){
+chart.data.labels.shift();
+chart.data.datasets[0].data.shift();
 }
 
-setInterval(updateData, 1000);
-</script>
+chart.update();
+}
 
+setInterval(updateData,1000);
+
+</script>
 </body>
 </html>
