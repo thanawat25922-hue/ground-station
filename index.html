@@ -17,7 +17,6 @@ body{
     font-family:Arial;
     color:white;
 }
-
 .container{
     display:grid;
     grid-template-columns: 1fr 1.5fr;
@@ -26,32 +25,25 @@ body{
     gap:10px;
     padding:10px;
 }
-
 .block{
     background:#0b1e2f;
     border-radius:10px;
     padding:15px;
 }
-
-h2{ margin-top:0; }
-
 .telemetry-row{
     display:flex;
     justify-content:space-between;
     padding:6px 0;
     border-bottom:1px solid rgba(255,255,255,0.08);
 }
-
 .value{
     color:#2cff9a;
     font-weight:bold;
 }
-
 #map{
     height:100%;
     border-radius:10px;
 }
-
 button{
     background:#132f46;
     color:white;
@@ -60,9 +52,6 @@ button{
     margin-right:5px;
     border-radius:6px;
     cursor:pointer;
-}
-button:hover{
-    background:#1d4666;
 }
 </style>
 </head>
@@ -84,11 +73,13 @@ button:hover{
 <div class="telemetry-row"><span>PRESSURE</span><span id="press" class="value">0 hPa</span></div>
 <div class="telemetry-row"><span>TEMPERATURE</span><span id="temp" class="value">0 °C</span></div>
 
-<div class="telemetry-row"><span>FALL ACCELERATION</span><span id="accel" class="value">0 m/s²</span></div>
+<div class="telemetry-row"><span>ACC X</span><span id="ax" class="value">0</span></div>
+<div class="telemetry-row"><span>ACC Y</span><span id="ay" class="value">0</span></div>
+<div class="telemetry-row"><span>ACC Z</span><span id="az" class="value">0</span></div>
+<div class="telemetry-row"><span>ACC MAG</span><span id="accmag" class="value">0</span></div>
 
 <div class="telemetry-row"><span>GPS LATITUDE</span><span id="lat" class="value">0</span></div>
 <div class="telemetry-row"><span>GPS LONGITUDE</span><span id="lon" class="value">0</span></div>
-
 </div>
 
 <!-- GRAPH -->
@@ -99,7 +90,7 @@ button:hover{
 <button onclick="selectGraph('temp')">Temperature</button>
 <button onclick="selectGraph('press')">Pressure</button>
 <button onclick="selectGraph('volt')">Voltage</button>
-<button onclick="selectGraph('accel')">Acceleration</button>
+<button onclick="selectGraph('accmag')">Acceleration</button>
 
 <canvas id="chart"></canvas>
 </div>
@@ -109,7 +100,6 @@ button:hover{
 <div id="map"></div>
 </div>
 
-<!-- RESERVED -->
 <div class="block" style="display:flex;align-items:center;justify-content:center;">
 RESERVED
 </div>
@@ -118,29 +108,26 @@ RESERVED
 
 <script>
 
-/* ---------- REAL CLOCK ---------- */
+/* ===== CLOCK ===== */
 function updateRealTime(){
-    let now = new Date();
     document.getElementById("mission").innerText =
-        now.toLocaleTimeString();
+        new Date().toLocaleTimeString();
 }
 
-/* ---------- DATA ---------- */
-let telemetry = {
+/* ===== DATA ===== */
+let telemetry={
     labels:[],
     altitude:[],
     temperature:[],
     pressure:[],
     voltage:[],
-    accel:[]
+    accmag:[]
 };
 
-let packet = 0;
+let packet=0;
 
-/* ---------- CHART ---------- */
-let ctx = document.getElementById('chart');
-
-let chart = new Chart(ctx,{
+/* ===== CHART ===== */
+let chart=new Chart(document.getElementById('chart'),{
     type:'line',
     data:{
         labels:[],
@@ -148,7 +135,8 @@ let chart = new Chart(ctx,{
             label:'Altitude (m)',
             data:[],
             borderColor:'#2cff9a',
-            tension:0.25
+            tension:0.3,
+            pointRadius:0
         }]
     },
     options:{
@@ -167,107 +155,85 @@ let chart = new Chart(ctx,{
 let currentGraph="alt";
 
 function selectGraph(type){
-    currentGraph = type;
+    currentGraph=type;
     updateGraph();
 }
 
 function updateGraph(){
 
-    let dataset;
-
     if(currentGraph==="alt"){
-        dataset = telemetry.altitude;
         chart.data.datasets[0].label="Altitude (m)";
+        chart.data.datasets[0].data=telemetry.altitude;
     }
-
     if(currentGraph==="temp"){
-        dataset = telemetry.temperature;
         chart.data.datasets[0].label="Temperature (°C)";
+        chart.data.datasets[0].data=telemetry.temperature;
     }
-
     if(currentGraph==="press"){
-        dataset = telemetry.pressure;
         chart.data.datasets[0].label="Pressure (hPa)";
+        chart.data.datasets[0].data=telemetry.pressure;
     }
-
     if(currentGraph==="volt"){
-        dataset = telemetry.voltage;
         chart.data.datasets[0].label="Voltage (V)";
+        chart.data.datasets[0].data=telemetry.voltage;
+    }
+    if(currentGraph==="accmag"){
+        chart.data.datasets[0].label="Acceleration Magnitude (m/s²)";
+        chart.data.datasets[0].data=telemetry.accmag;
     }
 
-    if(currentGraph==="accel"){
-        dataset = telemetry.accel;
-        chart.data.datasets[0].label="Acceleration (m/s²)";
-    }
-
-    chart.data.labels = telemetry.labels;
-    chart.data.datasets[0].data = dataset;
+    chart.data.labels=telemetry.labels;
     chart.update();
 }
 
-/* ---------- MAP ---------- */
-let map = L.map('map').setView([13.73,100.77],15);
+/* ===== MAP ===== */
+let map=L.map('map').setView([13.73,100.77],15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let marker=L.marker([13.73,100.77]).addTo(map);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-.addTo(map);
-
-let marker = L.marker([13.73,100.77]).addTo(map);
-
-/* ---------- HIGH SPEED SIMULATION (100Hz) ---------- */
-let lastTime = performance.now();
-
+/* ===== SIMULATION ===== */
 setInterval(()=>{
 
     updateRealTime();
-
-    let now = performance.now();
-    let dt = (now - lastTime)/1000;
-    lastTime = now;
-
     packet++;
 
-    // simulation
-    let alt = 170 + Math.sin(packet/30)*15;
-    let temp = 25 + Math.sin(packet/60)*2;
-    let press = 1000 + Math.sin(packet/50)*3;
-    let volt = 7.4 - packet*0.0002;
+    let alt=170+Math.sin(packet/5)*15;
+    let temp=25+Math.sin(packet/10)*2;
+    let press=1000+Math.sin(packet/8)*3;
+    let volt=7.4-packet*0.002;
 
-    // acceleration simulation (fall spikes)
-    let accel = 9.81 + Math.sin(packet/5)*2;
+    // simulated IMU
+    let ax=(Math.random()-0.5)*2;
+    let ay=(Math.random()-0.5)*2;
+    let az=9.81+(Math.random()-0.5);
 
-    let lat = 13.7328 + Math.sin(packet/200)*0.001;
-    let lon = 100.7763 + Math.cos(packet/200)*0.001;
+    let accmag=Math.sqrt(ax*ax+ay*ay+az*az);
 
     telemetry.labels.push(packet);
     telemetry.altitude.push(alt);
     telemetry.temperature.push(temp);
     telemetry.pressure.push(press);
     telemetry.voltage.push(volt);
-    telemetry.accel.push(accel);
+    telemetry.accmag.push(accmag);
 
-    if(telemetry.labels.length>200){
-        telemetry.labels.shift();
-        telemetry.altitude.shift();
-        telemetry.temperature.shift();
-        telemetry.pressure.shift();
-        telemetry.voltage.shift();
-        telemetry.accel.shift();
+    if(telemetry.labels.length>30){
+        Object.keys(telemetry).forEach(k=>telemetry[k].shift());
     }
 
-    document.getElementById("packet").innerText = packet;
-    document.getElementById("alt").innerText = alt.toFixed(2)+" m";
-    document.getElementById("temp").innerText = temp.toFixed(2)+" °C";
-    document.getElementById("press").innerText = press.toFixed(2)+" hPa";
-    document.getElementById("volt").innerText = volt.toFixed(2)+" V";
-    document.getElementById("accel").innerText = accel.toFixed(3)+" m/s²";
-    document.getElementById("lat").innerText = lat.toFixed(6);
-    document.getElementById("lon").innerText = lon.toFixed(6);
+    document.getElementById("packet").innerText=packet;
+    document.getElementById("alt").innerText=alt.toFixed(1)+" m";
+    document.getElementById("temp").innerText=temp.toFixed(1)+" °C";
+    document.getElementById("press").innerText=press.toFixed(1)+" hPa";
+    document.getElementById("volt").innerText=volt.toFixed(2)+" V";
 
-    marker.setLatLng([lat,lon]);
+    document.getElementById("ax").innerText=ax.toFixed(2);
+    document.getElementById("ay").innerText=ay.toFixed(2);
+    document.getElementById("az").innerText=az.toFixed(2);
+    document.getElementById("accmag").innerText=accmag.toFixed(2)+" m/s²";
 
     updateGraph();
 
-},10); // 10ms = 100Hz
+},1000);
 
 </script>
 
