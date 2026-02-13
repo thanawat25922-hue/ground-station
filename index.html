@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Ground Station Telemetry</title>
+<title>CanSat Ground Station</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="stylesheet"
- href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
@@ -19,8 +20,8 @@ body{
 }
 .container{
     display:grid;
-    grid-template-columns: 1fr 1.5fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns:1fr 1.5fr;
+    grid-template-rows:1fr 1fr;
     height:100vh;
     gap:10px;
     padding:10px;
@@ -28,13 +29,15 @@ body{
 .block{
     background:#0b1e2f;
     border-radius:10px;
-    padding:15px;
+    padding:12px;
+    overflow:auto;
 }
 .telemetry-row{
     display:flex;
     justify-content:space-between;
-    padding:6px 0;
+    padding:4px 0;
     border-bottom:1px solid rgba(255,255,255,0.08);
+    font-size:13px;
 }
 .value{
     color:#2cff9a;
@@ -42,14 +45,13 @@ body{
 }
 #map{
     height:100%;
-    border-radius:10px;
 }
 button{
     background:#132f46;
     color:white;
     border:none;
-    padding:6px 10px;
-    margin-right:5px;
+    padding:5px 8px;
+    margin:3px;
     border-radius:6px;
     cursor:pointer;
 }
@@ -62,35 +64,56 @@ button{
 
 <!-- TELEMETRY -->
 <div class="block">
-<h2>Telemetry</h2>
+<h3>Telemetry</h3>
 
 <div class="telemetry-row"><span>TEAM ID</span><span class="value">G2</span></div>
 <div class="telemetry-row"><span>MISSION TIME</span><span id="mission" class="value">00:00:00</span></div>
 <div class="telemetry-row"><span>PACKET COUNT</span><span id="packet" class="value">0</span></div>
+<div class="telemetry-row"><span>MODE</span><span id="mode" class="value">IDLE</span></div>
 
-<div class="telemetry-row"><span>VOLTAGE</span><span id="volt" class="value">0 V</span></div>
+<hr>
+
 <div class="telemetry-row"><span>ALTITUDE</span><span id="alt" class="value">0 m</span></div>
+<div class="telemetry-row"><span>GPS ALTITUDE</span><span id="gpsalt" class="value">0 m</span></div>
 <div class="telemetry-row"><span>PRESSURE</span><span id="press" class="value">0 hPa</span></div>
 <div class="telemetry-row"><span>TEMPERATURE</span><span id="temp" class="value">0 °C</span></div>
+<div class="telemetry-row"><span>VOLTAGE</span><span id="volt" class="value">0 V</span></div>
+
+<hr>
+
+<div class="telemetry-row"><span>GPS LAT</span><span id="lat" class="value">0</span></div>
+<div class="telemetry-row"><span>GPS LON</span><span id="lon" class="value">0</span></div>
+<div class="telemetry-row"><span>SATELLITES</span><span id="sat" class="value">0</span></div>
+
+<hr>
 
 <div class="telemetry-row"><span>ACC X</span><span id="ax" class="value">0</span></div>
 <div class="telemetry-row"><span>ACC Y</span><span id="ay" class="value">0</span></div>
 <div class="telemetry-row"><span>ACC Z</span><span id="az" class="value">0</span></div>
 <div class="telemetry-row"><span>ACC MAG</span><span id="accmag" class="value">0</span></div>
 
-<div class="telemetry-row"><span>GPS LATITUDE</span><span id="lat" class="value">0</span></div>
-<div class="telemetry-row"><span>GPS LONGITUDE</span><span id="lon" class="value">0</span></div>
+<div class="telemetry-row"><span>GYRO X</span><span id="gx" class="value">0</span></div>
+<div class="telemetry-row"><span>GYRO Y</span><span id="gy" class="value">0</span></div>
+<div class="telemetry-row"><span>GYRO Z</span><span id="gz" class="value">0</span></div>
+
+<div class="telemetry-row"><span>ROLL</span><span id="roll" class="value">0°</span></div>
+<div class="telemetry-row"><span>PITCH</span><span id="pitch" class="value">0°</span></div>
+<div class="telemetry-row"><span>YAW</span><span id="yaw" class="value">0°</span></div>
+
+<hr>
+
+<div class="telemetry-row"><span>DESCENT RATE</span><span id="descent" class="value">0 m/s</span></div>
+
 </div>
 
 <!-- GRAPH -->
 <div class="block">
-<h2>Graphs</h2>
+<h3>Graph</h3>
 
-<button onclick="selectGraph('alt')">Altitude</button>
-<button onclick="selectGraph('temp')">Temperature</button>
-<button onclick="selectGraph('press')">Pressure</button>
-<button onclick="selectGraph('volt')">Voltage</button>
-<button onclick="selectGraph('accmag')">Acceleration</button>
+<button onclick="setGraph('alt')">Altitude</button>
+<button onclick="setGraph('temp')">Temp</button>
+<button onclick="setGraph('acc')">Acc Mag</button>
+<button onclick="setGraph('descent')">Descent</button>
 
 <canvas id="chart"></canvas>
 </div>
@@ -101,137 +124,131 @@ button{
 </div>
 
 <div class="block" style="display:flex;align-items:center;justify-content:center;">
-RESERVED
+READY FOR FLIGHT
 </div>
 
 </div>
 
 <script>
 
-/* ===== CLOCK ===== */
-function updateRealTime(){
+function clock(){
     document.getElementById("mission").innerText =
-        new Date().toLocaleTimeString();
+    new Date().toLocaleTimeString();
 }
 
-/* ===== DATA ===== */
-let telemetry={
+let packet=0;
+let prevAlt=0;
+
+let dataStore={
     labels:[],
-    altitude:[],
-    temperature:[],
-    pressure:[],
-    voltage:[],
-    accmag:[]
+    alt:[],
+    temp:[],
+    acc:[],
+    descent:[]
 };
 
-let packet=0;
-
-/* ===== CHART ===== */
-let chart=new Chart(document.getElementById('chart'),{
-    type:'line',
+let chart=new Chart(document.getElementById("chart"),{
+    type:"line",
     data:{
         labels:[],
         datasets:[{
-            label:'Altitude (m)',
+            label:"Altitude",
             data:[],
-            borderColor:'#2cff9a',
-            tension:0.3,
-            pointRadius:0
+            borderColor:"#2cff9a",
+            tension:0.3
         }]
-    },
-    options:{
-        responsive:true,
-        animation:false,
-        scales:{
-            y:{ticks:{color:'white'}},
-            x:{ticks:{color:'white'}}
-        },
-        plugins:{
-            legend:{labels:{color:'white'}}
-        }
     }
 });
 
-let currentGraph="alt";
+let current="alt";
 
-function selectGraph(type){
-    currentGraph=type;
-    updateGraph();
+function setGraph(type){
+    current=type;
 }
 
-function updateGraph(){
-
-    if(currentGraph==="alt"){
-        chart.data.datasets[0].label="Altitude (m)";
-        chart.data.datasets[0].data=telemetry.altitude;
-    }
-    if(currentGraph==="temp"){
-        chart.data.datasets[0].label="Temperature (°C)";
-        chart.data.datasets[0].data=telemetry.temperature;
-    }
-    if(currentGraph==="press"){
-        chart.data.datasets[0].label="Pressure (hPa)";
-        chart.data.datasets[0].data=telemetry.pressure;
-    }
-    if(currentGraph==="volt"){
-        chart.data.datasets[0].label="Voltage (V)";
-        chart.data.datasets[0].data=telemetry.voltage;
-    }
-    if(currentGraph==="accmag"){
-        chart.data.datasets[0].label="Acceleration Magnitude (m/s²)";
-        chart.data.datasets[0].data=telemetry.accmag;
-    }
-
-    chart.data.labels=telemetry.labels;
-    chart.update();
-}
-
-/* ===== MAP ===== */
 let map=L.map('map').setView([13.73,100.77],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 let marker=L.marker([13.73,100.77]).addTo(map);
 
-/* ===== SIMULATION ===== */
 setInterval(()=>{
 
-    updateRealTime();
-    packet++;
+clock();
+packet++;
 
-    let alt=170+Math.sin(packet/5)*15;
-    let temp=25+Math.sin(packet/10)*2;
-    let press=1000+Math.sin(packet/8)*3;
-    let volt=7.4-packet*0.002;
+let alt=170+Math.sin(packet/5)*20;
+let gpsalt=alt+2;
+let temp=25+Math.sin(packet/8);
+let press=1000+Math.sin(packet/10)*3;
+let volt=7.4-packet*0.002;
 
-    // simulated IMU
-    let ax=(Math.random()-0.5)*2;
-    let ay=(Math.random()-0.5)*2;
-    let az=9.81+(Math.random()-0.5);
+let ax=Math.random()*2-1;
+let ay=Math.random()*2-1;
+let az=9.8+(Math.random()-0.5);
 
-    let accmag=Math.sqrt(ax*ax+ay*ay+az*az);
+let accmag=Math.sqrt(ax*ax+ay*ay+az*az);
 
-    telemetry.labels.push(packet);
-    telemetry.altitude.push(alt);
-    telemetry.temperature.push(temp);
-    telemetry.pressure.push(press);
-    telemetry.voltage.push(volt);
-    telemetry.accmag.push(accmag);
+let gx=Math.random()*5;
+let gy=Math.random()*5;
+let gz=Math.random()*5;
 
-    if(telemetry.labels.length>30){
-        Object.keys(telemetry).forEach(k=>telemetry[k].shift());
-    }
+let roll=Math.random()*10;
+let pitch=Math.random()*10;
+let yaw=Math.random()*360;
 
-    document.getElementById("packet").innerText=packet;
-    document.getElementById("alt").innerText=alt.toFixed(1)+" m";
-    document.getElementById("temp").innerText=temp.toFixed(1)+" °C";
-    document.getElementById("press").innerText=press.toFixed(1)+" hPa";
-    document.getElementById("volt").innerText=volt.toFixed(2)+" V";
+let descent=(prevAlt-alt);
+prevAlt=alt;
 
-    document.getElementById("ax").innerText=ax.toFixed(2);
-    document.getElementById("ay").innerText=ay.toFixed(2);
-    document.getElementById("az").innerText=az.toFixed(2);
-    document.getElementById("accmag").innerText=accmag.toFixed(2)+" m/s²";
+let lat=13.73+Math.sin(packet/20)*0.001;
+let lon=100.77+Math.cos(packet/20)*0.001;
 
-    updateGraph();
+let sat=8+Math.floor(Math.random()*3);
+
+let mode="ASCENT";
+if(descent>0) mode="DESCENT";
+if(packet>120) mode="LANDED";
+
+dataStore.labels.push(packet);
+dataStore.alt.push(alt);
+dataStore.temp.push(temp);
+dataStore.acc.push(accmag);
+dataStore.descent.push(descent);
+
+if(dataStore.labels.length>30){
+    Object.keys(dataStore).forEach(k=>dataStore[k].shift());
+}
+
+chart.data.labels=dataStore.labels;
+chart.data.datasets[0].data=dataStore[current];
+chart.update();
+
+document.getElementById("packet").innerText=packet;
+document.getElementById("mode").innerText=mode;
+document.getElementById("alt").innerText=alt.toFixed(1)+" m";
+document.getElementById("gpsalt").innerText=gpsalt.toFixed(1)+" m";
+document.getElementById("temp").innerText=temp.toFixed(1)+" °C";
+document.getElementById("press").innerText=press.toFixed(1)+" hPa";
+document.getElementById("volt").innerText=volt.toFixed(2)+" V";
+
+document.getElementById("lat").innerText=lat.toFixed(6);
+document.getElementById("lon").innerText=lon.toFixed(6);
+document.getElementById("sat").innerText=sat;
+
+document.getElementById("ax").innerText=ax.toFixed(2);
+document.getElementById("ay").innerText=ay.toFixed(2);
+document.getElementById("az").innerText=az.toFixed(2);
+document.getElementById("accmag").innerText=accmag.toFixed(2);
+
+document.getElementById("gx").innerText=gx.toFixed(2);
+document.getElementById("gy").innerText=gy.toFixed(2);
+document.getElementById("gz").innerText=gz.toFixed(2);
+
+document.getElementById("roll").innerText=roll.toFixed(1)+"°";
+document.getElementById("pitch").innerText=pitch.toFixed(1)+"°";
+document.getElementById("yaw").innerText=yaw.toFixed(1)+"°";
+
+document.getElementById("descent").innerText=descent.toFixed(2)+" m/s";
+
+marker.setLatLng([lat,lon]);
 
 },1000);
 
