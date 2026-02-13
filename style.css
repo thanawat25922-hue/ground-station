@@ -1,20 +1,55 @@
 body {
-    background: #0f1115;
-    color: #00ff9c;
+    margin: 0;
     font-family: Arial;
+    background: #0b0f14;
+    color: white;
 }
 
 .container {
     display: flex;
+    height: 60vh;
 }
 
-.left {
-    width: 250px;
-    padding: 20px;
-    border-right: 1px solid #333;
+.left-panel {
+    width: 300px;
+    background: #111722;
+    padding: 15px;
 }
 
-.right {
+.row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #222;
+}
+
+.right-panel {
     flex: 1;
-    padding: 20px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+canvas {
+    background: #111722;
+    border-radius: 8px;
+}
+
+#map {
+    height: 40vh;
+}
+
+.status {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+}
+
+#status {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: red;
+    margin-left: 10px;
 }
