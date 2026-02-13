@@ -1,0 +1,20 @@
+body {
+    background: #0f1115;
+    color: #00ff9c;
+    font-family: Arial;
+}
+
+.container {
+    display: flex;
+}
+
+.left {
+    width: 250px;
+    padding: 20px;
+    border-right: 1px solid #333;
+}
+
+.right {
+    flex: 1;
+    padding: 20px;
+}
