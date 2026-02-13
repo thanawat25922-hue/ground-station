@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Ground Station</title>
 
 <link rel="stylesheet" href="style.css">
 
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- Leaflet MAP -->
 <link rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </head>
 
@@ -19,49 +23,29 @@ href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <div class="container">
 
-    <!-- LEFT PANEL -->
+    <!-- LEFT TELEMETRY -->
     <div class="telemetry">
 
-        <h1>TELEMETRY</h1>
+        <h2>TELEMETRY</h2>
 
         <div class="grid">
-
             <div>TEAM ID</div><div id="team">G2</div>
-            <div>MISSION TIME</div><div id="mission">00:00</div>
-
-            <div>PACKET COUNT</div><div id="packet">0</div>
-            <div>MODE</div><div id="mode">FLIGHT</div>
-
-            <div>VOLTAGE</div><div id="voltage">0</div>
-            <div>STATE</div><div id="state">READY</div>
+            <div>PACKET</div><div id="packet">0</div>
 
             <div>ALTITUDE</div><div id="altitude">0</div>
-            <div>GYRO PITCH</div><div id="gyroPitch">0</div>
-
-            <div>PRESSURE</div><div id="pressure">0</div>
-            <div>GYRO ROLL</div><div id="gyroRoll">0</div>
-
             <div>TEMPERATURE</div><div id="temp">0</div>
-            <div>GYRO YAW</div><div id="gyroYaw">0</div>
 
-            <div>HUMIDITY</div><div id="humidity">0</div>
-            <div>ACC PITCH</div><div id="accPitch">0</div>
+            <div>VOLTAGE</div><div id="voltage">0</div>
+            <div>PRESSURE</div><div id="pressure">0</div>
 
-            <div>ACC YAW</div><div id="accYaw">0</div>
-            <div>ACC ROLL</div><div id="accRoll">0</div>
-
-            <div>GPS STATE</div><div id="gpsState">FIX</div>
-            <div>GPS TIME</div><div id="gpsTime">00:00</div>
-
-            <div>GPS LONGITUDE</div><div id="lon">0</div>
-            <div>GPS LATITUDE</div><div id="lat">0</div>
-
+            <div>GPS LAT</div><div id="lat">0</div>
+            <div>GPS LON</div><div id="lon">0</div>
         </div>
 
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="charts">
+    <!-- RIGHT -->
+    <div class="right">
 
         <canvas id="altChart"></canvas>
         <canvas id="tempChart"></canvas>
